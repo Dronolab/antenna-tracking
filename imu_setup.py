@@ -63,8 +63,7 @@ def ReadSingleIMU():
     if imu.IMURead():
         data = imu.getIMUData()  # Read IMU data
         fusionPose = data["fusionPose"]
-        # answer.append(fusionPose)
-        # return fusionPose
+
         time.sleep(imu.IMUGetPollInterval() * 0.001)
         return fusionPose
     else:

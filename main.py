@@ -15,7 +15,7 @@ if __name__ == '__main__':
     atc = AntennaTrackingController()
 
     try:
-        atc.start(False)
+        atc.start()
     except KeyboardInterrupt:
         print('\r')
         atc.stop()

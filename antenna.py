@@ -3,6 +3,7 @@ import os
 import logging
 import Adafruit_PCA9685
 from imu_client import ImuClient
+from gps_client import GPSClient
 from unmanned_aerial_vehicule import UnmannedAerialVehicule
 from yaw_servo import YawServo
 from pitch_servo import PitchServo
@@ -11,15 +12,15 @@ from pitch_servo import PitchServo
 class Antenna():
 
     # Hardcoded antenna position. Useful when GPS is unavailable
-    SATELLITE_DISH_DEFAULT_LATITUDE = 45.4939087
-    SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5630330
-    SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
+    SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946532
+    SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5627038
+    SATELLITE_DISH_DEFAULT_ALTITUDE = 20.0
 
     # Usually it's 60Hz but in this case we want it to go to 100Hz
     PMW_FREQUENCY = 100  # Hz
 
     # Hardcoded magnetic declination
-    MAGNETIC_DECLINATION = -14.52
+    MAGNETIC_DECLINATION = -14.46667
 
     def __init__(self):
         """ Constructor """
@@ -36,6 +37,13 @@ class Antenna():
         self.alt = self.SATELLITE_DISH_DEFAULT_ALTITUDE
         self.lat = self.SATELLITE_DISH_DEFAULT_LATITUDE
         self.lon = self.SATELLITE_DISH_DEFAULT_LONGITUDE
+
+        self.gps_client = GPSClient()
+        self.gps_client.GPS_coordinate_avg(5)
+
+        print("LAT: " + str(self.gps_client.lat))
+        print("ALT: " + str(self.gps_client.alt))
+        print("LON: " + str(self.gps_client.lon))
 
         # Initialize UAV values
         self.uav_alt = 0
@@ -85,6 +93,7 @@ class Antenna():
 
             # Initialize deadzone
             self._read_imu(5)
+            self.update_imu()
             self._bearing_offset = self.yaw
 
     def update_imu(self):
