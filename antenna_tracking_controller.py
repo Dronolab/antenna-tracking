@@ -46,6 +46,10 @@ class AntennaTrackingController:
                 if verbose:
                     self.antenna.print_current_data()
 
+        else:
+            logging.error(
+                'Initialization aborted due to unmet startup conditions for one or more module.')
+
         self.stop()
 
     def stop(self):

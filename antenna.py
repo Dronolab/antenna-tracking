@@ -60,27 +60,32 @@ class Antenna():
         self.uav = UnmannedAerialVehicule()
         self.uav.start()
 
+        self.is_pwm_ready = False
+
         # Setup pwm
-        self._pwm = Adafruit_PCA9685.PCA9685()
-        self._pwm.set_pwm_freq(self.PMW_FREQUENCY)
+        try:
+            self._pwm = Adafruit_PCA9685.PCA9685()
+            self._pwm.set_pwm_freq(self.PMW_FREQUENCY)
+            self.is_pwm_ready = True
+        except IOError:
+            logging.error(
+                "PWM module failed to initialize. Please check if the adafruit hat is plugged in the Raspberry Pi GPIO pins.")
 
         # Init servos
         self.yaw_servo = YawServo(-180, 180, 1.1, 1.9, 100, 0, 0.8)
         self.pitch_servo = PitchServo(0, 90, 1.1, 1.9, 100, 1, 0.5)
 
         # Health check on every component
-        if self.imu.ready and self.uav.ready:
+        if self.imu.ready and self.uav.ready and self.is_pwm_ready:
             self.ready = True
-
-        print(self.ready)
 
         if self.ready:
             logging.info(
                 'Antenna tracking system successfully started. Ctrl-C to stop...')
 
-        # Initialize deadzone
-        self._read_imu(5)
-        self._bearing_offset = self.yaw
+            # Initialize deadzone
+            self._read_imu(5)
+            self._bearing_offset = self.yaw
 
     def update_imu(self):
         """ Get newest values from imu module """
@@ -99,6 +104,9 @@ class Antenna():
         self.imu.kill = True
 
         self.uav.close()
+
+        if not self.is_pwm_ready:
+            return
 
         # Set yaw servo to neutral position (will stop the servo movement)
         self.tick_yaw = 614
