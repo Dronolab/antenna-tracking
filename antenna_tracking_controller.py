@@ -15,6 +15,7 @@ class AntennaTrackingController:
     SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946761
     SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5622961
     SATELLITE_DISH_DEFAULT_ALTITUDE = 14
+    MAVLINK_GPS_ID = 33
 
     def __init__(self):
         # Setting up the pwm
@@ -41,7 +42,7 @@ class AntennaTrackingController:
         while True:
             data, addr = self.sock.recvfrom(1024)
             drone_gps = json.loads(data)
-            if drone_gps['packet_id'] != 33:
+            if drone_gps['packet_id'] != self.MAVLINK_GPS_ID:
                 continue
 
             lat_drone = float(drone_gps['lat'])
@@ -67,7 +68,7 @@ class AntennaTrackingController:
         IMU_data, addr = sock.recvfrom(1024)
         pitch,yaw,roll  = struct.unpack("ddd",IMU_data)
 
-    def bearing(self,lat_sat, long_sat, lat_drone, long_drone):
+    def bearing(self, lat_sat, long_sat, lat_drone, long_drone):
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
         long_sat = math.radians(long_sat)
@@ -83,7 +84,7 @@ class AntennaTrackingController:
         #bearing_360=(bearing_initial+360)%360
         return bearing_initial
         
-    def pitch(self, lat_sat, long_sat,alt_sat, lat_drone, long_drone,alt_drone):
+    def pitch(self, lat_sat, long_sat,alt_sat, lat_drone, long_drone, alt_drone):
         R = 6371000
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
@@ -100,7 +101,7 @@ class AntennaTrackingController:
 
         return pitch_angle    
 
-    def bearingoffset(self, angle,bearingangleoffset):
+    def bearingoffset(self, angle, bearingangleoffset):
         newbearing = angle
         newbearing -= bearingangleoffset
         if newbearing > 180 :
@@ -110,7 +111,7 @@ class AntennaTrackingController:
 
         return newbearing
 
-    def pitchoffset(self, angle,pitchangleoffset):
+    def pitchoffset(self, angle, pitchangleoffset):
         newpitch = angle
         newpitch -= bearingangleoffset
         if newpitch > 180 :
@@ -120,6 +121,6 @@ class AntennaTrackingController:
 
         return newbearing
 
-    def servo_move(pitch_drone,pitch_antenna,bearing_drone,bearing_antenna):
+    def servo_move(pitch_drone, pitch_antenna, bearing_drone, bearing_antenna):
         delta_pitch = pitch_drone - pitch_antenna
         delta_bearing = bearing_drone - bearing_antenna
