@@ -1,4 +1,5 @@
-import sys, getopt
+import sys
+import getopt
 
 from antenna_tracking_controller import AntennaTrackingController
 
