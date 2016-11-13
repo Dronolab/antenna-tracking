@@ -1,6 +1,7 @@
 import sys
 import getopt
 import logging
+
 from antenna_tracking_controller import AntennaTrackingController
 
 if __name__ == '__main__':
