@@ -1,8 +1,11 @@
 import json
-import math
 import socket
+import logging
 import struct
+import sys
 import Adafruit_PCA9685
+from antenna import Antenna
+from unmanned_aerial_vehicule import UnmannedAerialVehicule
 
 
 class AntennaTrackingController:
@@ -19,60 +22,41 @@ class AntennaTrackingController:
     MAVLINK_GPS_ID = 33
 
     def __init__(self):
+        self.greeting()
         # Setting up the pwm
         self.pwm = Adafruit_PCA9685.PCA9685()
         self.pwm.set_pwm_freq(self.PMW_FREQUENCY)
 
     def start(self):
-        # Create socket
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        print "Socket created"
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        print "Socket binded"
-        self.sock.bind((self.LISTENING_IP, self.LISTENING_PORT))
+        # Setup UAV
+        self.uav = UnmannedAerialVehicule(
+            AntennaTrackingController.LISTENING_IP,
+            AntennaTrackingController.LISTENING_PORT)
+        self.uav.create_bind_socket()
 
         # Antenna coordinates
-
-        #
-        # TODO: Quand on aura du GPS, faire du handling pour ne pas prendre la
-        # latitude et longitude par defaut
-        #
         self.antenna_latitude = self.SATELLITE_DISH_DEFAULT_LATITUDE
         self.antenna_longitude = self.SATELLITE_DISH_DEFAULT_LONGITUDE
         self.antenna_altitude = self.SATELLITE_DISH_DEFAULT_ALTITUDE
 
+        self.antenna = Antenna()
+
         while True:
-            data, addr = self.sock.recvfrom(1024)
+            data, addr = self.uav.receive_telemetry()
             drone_gps = json.loads(data)
+
             if drone_gps['packet_id'] != self.MAVLINK_GPS_ID:
                 continue
 
-            lat_drone = float(drone_gps['lat'])
-            lon_drone = float(drone_gps['lon'])
-            alt_drone = float(drone_gps['alt'])
-
-            self.bearing_diff = self.bearing(
-                self.antenna_latitude,
-                self.antenna_longitude,
-                lat_drone, lon_drone
-            )
-
-            self.pitch_diff = self.pitch(
-                self.antenna_latitude,
-                self.antenna_longitude,
-                self.antenna_altitude,
-                lat_drone, lon_drone,
-                alt_drone
-            )
-
-        print(self.bearing_diff)
+            lat_drone = drone_gps['lat']
+            lon_drone = drone_gps['lon']
+            alt_drone = drone_gps['alt']
 
     #
     # Gracefully stop antenna tracking controller
     #
     def stop(self):
-        print("Antenna tracking stopped")
-        self.sock.close()
+        logging.info('Closing antenna tracking system')
 
     def get_gpsdata(self):
         data, addr = sock.recvfrom(1024)
@@ -85,3 +69,30 @@ class AntennaTrackingController:
     def servo_move(pitch_drone, pitch_antenna, bearing_drone, bearing_antenna):
         delta_pitch = pitch_drone - pitch_antenna
         delta_bearing = bearing_drone - bearing_antenna
+
+    def greeting(self):
+        print("""
+  ___        _                           _                  _    _
+ / _ \      | |                         | |                | |  (_)
+/ /_\ \_ __ | |_ ___ _ __  _ __   __ _  | |_ _ __ __ _  ___| | ___ _ __   __ _
+|  _  | '_ \| __/ _ \ '_ \| '_ \ / _` | | __| '__/ _` |/ __| |/ / | '_ \ / _` |
+| | | | | | | ||  __/ | | | | | | (_| | | |_| | | (_| | (__|   <| | | | | (_| |
+\_| |_/_| |_|\__\___|_| |_|_| |_|\__,_|  \__|_|  \__,_|\___|_|\_\_|_| |_|\__, |
+                                                                          __/ |
+        _.--l--._                                                        |___/
+     .`    |     `.
+   .` `.    |    .` `.
+ .`     `   |  .`     `.     POWERED BY DRONOLAB
+/ __       .|.`      __ \    Source code: github.com/dronolab/antenna_tracking
+|   ''--._  V  _.--''   |    License: MIT
+|        _ (") _        |
+| __..--'   ^   '--..__ | _
+\\         .`|`.         /-.)
+ `.     .`  |  `.     .`
+   `. .`    |    `. .`
+     `._    |    _.`|
+         `--l--` |  |
+                 / . \\
+                / / \\ \\
+               / /   \\ \\
+        """)

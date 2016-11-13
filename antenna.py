@@ -1,3 +1,7 @@
+import math
+import logging
+from servo import Servo
+
 
 class Antenna():
 
@@ -7,14 +11,17 @@ class Antenna():
         self.yaw = 0
         self.wyaw = 0
         self.wpitch = 0
-        self.bearingoffset = 0
-        self.uavAlt = 0
-        self.uavLon = 0
-        self.uavLat = 0
-        self.antennaAlt = 0
-        self.antennaLon = 0
-        self.antennaLat = 0
+        self.bearing_offset = 0
+        self.uav_alt = 0
+        self.uav_lon = 0
+        self.uav_lat = 0
+        self.alt = 0
+        self.lon = 0
+        self.lat = 0
         self.declination = -14.52
+
+        self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
+        self.pitch_Servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
 
     def arrow(self, arrow):
         if arrow == 0:
@@ -26,27 +33,25 @@ class Antenna():
         elif arrow == 3:
             self.wyaw -= 5
 
-    def Orientationoffset(self, bearingoffset):
-        self.bearingoffset = bearingoffset
+    def Orientationoffset(self, bearing_offset):
+        self.bearing_offset = bearing_offset
 
     def angleoffsetcalc(self):
-        self.yaw = self.bearingoffset(self.yaw, self.bearingoffset)
-        self.wyaw = self.bearingoffset(self.wyaw, self.bearingoffset)
+        self.yaw = self.bearing_offset(self.yaw, self.bearing_offset)
+        self.wyaw = self.bearing_offset(self.wyaw, self.bearing_offset)
 
     def updateYawFromGPS(self):
         self.wyaw = self.bearing(
-            self.antennaLat, self.antennaLon, self.uavLat, self.uavLon)
+            self.lat, self.lon, self.uav_lat, self.uav_lon)
 
     def updatePitchFromGPS(self):
         self.wpitch = self.pitch(
-            self.antennaLat, self.antennaLon, self.antennaAlt, self.uavLat, self.uavLon, self.uavAlt)
+            self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
 
     def magneticDeclinationUpdate(self):
         self.wyaw = self.wyaw - self.declination
 
-    def pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone,
-              alt_drone):
-
+    def pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
         R = 6371000
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
@@ -61,6 +66,7 @@ class Antenna():
         d = R * c
         pitch_angle = math.atan2(delta_alt, d)
         pitch_angle = math.degrees(pitch_angle)
+
         return pitch_angle
 
     def pitchoffset(self, angle, pitchangleoffset):
@@ -89,7 +95,7 @@ class Antenna():
         # bearing_360=(bearing_initial+360)%360
         return bearing_initial
 
-    def bearingoffset(self, angle, bearingangleoffset):
+    def bearing_offset(self, angle, bearingangleoffset):
         newbearing = angle
         newbearing -= bearingangleoffset
         if newbearing > 180:
