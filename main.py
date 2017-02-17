@@ -16,4 +16,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('\r')
         atc.stop()
+        logging.info('Antenna tracking system terminated.')
         sys.exit(0)

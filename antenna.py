@@ -3,7 +3,6 @@ import logging
 from servo import Servo
 from imu_client import ImuClient
 
-
 class Antenna():
 
     def __init__(self):
@@ -65,6 +64,20 @@ class Antenna():
     def wanted_pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
         EARTH_RADIUS = 6371000
 
+=======
+    def updateYawFromGPS(self):
+        self.wyaw = self.bearing(
+            self.lat, self.lon, self.uav_lat, self.uav_lon)
+
+    def updatePitchFromGPS(self):
+        self.wpitch = self.pitch(
+            self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
+
+    def magneticDeclinationUpdate(self):
+        self.wyaw = self.wyaw - self.declination
+
+    def pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
+        R = 6371000
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
         long_sat = math.radians(long_sat)

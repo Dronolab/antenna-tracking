@@ -1,6 +1,5 @@
 import math
 
-
 class Servo():
 
     def __init__(self, min_angle, max_angle, min_pwm, max_pwm, hold_pwm,

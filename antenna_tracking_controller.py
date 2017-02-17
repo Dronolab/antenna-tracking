@@ -25,7 +25,6 @@ class AntennaTrackingController:
     MAVLINK_GPS_ID = 33
 
     def __init__(self):
-
         self.greeting()
         # Setting up the pwm
         self.pwm = Adafruit_PCA9685.PCA9685()
@@ -63,6 +62,14 @@ class AntennaTrackingController:
             self.antenna.updateIMU()
 
             # Update UAV
+        # Antenna coordinates
+        self.antenna_latitude = self.SATELLITE_DISH_DEFAULT_LATITUDE
+        self.antenna_longitude = self.SATELLITE_DISH_DEFAULT_LONGITUDE
+        self.antenna_altitude = self.SATELLITE_DISH_DEFAULT_ALTITUDE
+
+        self.antenna = Antenna()
+
+        while True:
             data, addr = self.uav.receive_telemetry()
             drone_gps = json.loads(data)
 
@@ -109,6 +116,10 @@ class AntennaTrackingController:
             print("[Servos]")
             print("\tYaw tick\t" + str(tick_yaw))
             print("\tPitch tick\t" + str(tick_pitch))
+
+            lat_drone = drone_gps['lat']
+            lon_drone = drone_gps['lon']
+            alt_drone = drone_gps['alt']
 
     #
     # Gracefully stop antenna tracking controller
