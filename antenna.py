@@ -64,7 +64,6 @@ class Antenna():
     def wanted_pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
         EARTH_RADIUS = 6371000
 
-=======
     def updateYawFromGPS(self):
         self.wyaw = self.bearing(
             self.lat, self.lon, self.uav_lat, self.uav_lon)
