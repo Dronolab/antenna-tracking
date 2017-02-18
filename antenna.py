@@ -1,9 +1,7 @@
 import math
 import logging
 from servo import Servo
-
 from imu_client import ImuClient
-
 
 class Antenna():
 
@@ -35,9 +33,6 @@ class Antenna():
     def close(self):
         self.imu.kill = True
 
-    #
-    # TODO: WTF
-    #
     def arrow(self, arrow):
         if arrow == 0:
             self.wpitch += 5
@@ -54,6 +49,20 @@ class Antenna():
     def angleoffsetcalc(self):
         self.yaw = self.bearing_offset(self.yaw, self.bearing_offset)
         self.wyaw = self.bearing_offset(self.wyaw, self.bearing_offset)
+
+    def update_yaw_from_gps(self):
+        self.wyaw = self.bearing(
+            self.lat, self.lon, self.uav_lat, self.uav_lon)
+
+    def update_pitch_from_gps(self):
+        self.wpitch = self.wanted_pitch(
+            self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
+
+    def update_magnetic_declination(self):
+        self.wyaw = self.wyaw - self.declination
+
+    def wanted_pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
+        EARTH_RADIUS = 6371000
 
     def updateYawFromGPS(self):
         self.wyaw = self.bearing(
@@ -72,13 +81,16 @@ class Antenna():
         lat_drone = math.radians(lat_drone)
         long_sat = math.radians(long_sat)
         long_drone = math.radians(long_drone)
+
         delta_long = long_drone - long_sat
         delta_lat = lat_drone - lat_sat
+
         delta_alt = alt_drone-alt_sat
         a = math.pow(math.sin(delta_lat/2),2) + math.cos(lat_sat) * math.cos(lat_drone) * math.pow(math.sin(delta_long/2),2)
         c = 2 * math.atan2(math.sqrt(a),math.sqrt(1-a))
         d = R * c
         pitch_angle = math.atan2(delta_alt,d)
+
         pitch_angle = math.degrees(pitch_angle)
 
         return pitch_angle    

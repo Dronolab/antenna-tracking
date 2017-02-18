@@ -6,10 +6,12 @@ import sys
 import Adafruit_PCA9685
 from antenna import Antenna
 from unmanned_aerial_vehicule import UnmannedAerialVehicule
+
 import time
 import os
 import imu_client
 from servo import Servo
+
 
 
 class AntennaTrackingController:
@@ -18,9 +20,11 @@ class AntennaTrackingController:
     LISTENING_IP = "0.0.0.0"
     LISTENING_PORT = 5008
     PMW_FREQUENCY = 60
+
     SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946761
     SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5622961
     SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
+
     MAVLINK_GPS_ID = 33
 
     def __init__(self):
@@ -29,6 +33,12 @@ class AntennaTrackingController:
         self.pwm = Adafruit_PCA9685.PCA9685()
         self.pwm.set_pwm_freq(self.PMW_FREQUENCY)
 
+        # Entry point of Antenna GPS position
+        # gps_ = gpsreader('antgps.txt')
+
+        # Entry point of UAV GPS position
+        # uavtxt = gpsreader('uavgps.txt')
+
     def start(self):
         # Setup UAV
         self.uav = UnmannedAerialVehicule(
@@ -36,9 +46,11 @@ class AntennaTrackingController:
             AntennaTrackingController.LISTENING_PORT)
         self.uav.create_bind_socket()
 
+
         # Init servos
         self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
         self.pitch_servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
+
 
         # Setup Antenna
         self.antenna = Antenna()
@@ -70,6 +82,7 @@ class AntennaTrackingController:
 
             # Update servos
             tick_yaw = self.yaw_servo.refresh(self.antenna.wyaw, self.antenna.yaw)
+            
             self.pwm.set_pwm(self.yaw_servo.channel, 0, tick_yaw)
 
             tick_pitch = self.pitch_servo.refresh(
@@ -106,13 +119,14 @@ class AntennaTrackingController:
     def stop(self):
         logging.info('Closing antenna tracking system')
         self.antenna.close()
+
         # todo un-hardcode 375
         self.pwm.set_pwm(self.pitch_servo.channel, 0, int((self.pitch_servo.max_pwm - self.pitch_servo.min_pwm)/ 2 + self.pitch_servo.min_pwm))
         self.pwm.set_pwm(self.yaw_servo.channel, 0, int((self.yaw_servo.max_pwm - self.yaw_servo.min_pwm)/ 2 + self.yaw_servo.min_pwm))
     
     def get_gpsdata(self):
         data, addr = sock.recvfrom(1024)
-        # print "gps_data:", data
+        print "gps_data:", data
 
     # def get_IMUdata(self):
         #IMU_data, addr = sock.recvfrom(1024)

@@ -19,7 +19,6 @@ class ImuClient (threading.Thread):
         self.kill = False
 
     def run(self):
-
         try:
             while True:
                 fusionPose = imu_setup.ReadSingleIMU()
@@ -27,7 +26,6 @@ class ImuClient (threading.Thread):
                     self.roll = math.degrees(fusionPose[0])
                     self.pitch = math.degrees(fusionPose[1])
                     self.yaw = math.degrees(fusionPose[2])
-
                 if self.kill:
                     logging.info("Closing IMU Thread")
                     break

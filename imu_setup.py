@@ -40,6 +40,7 @@ if k == 0:
 
 
 # Read Imu number for X time and return the average value
+
 # def ReadImu(accel, x):
 
 #    r = 0
@@ -64,6 +65,7 @@ if k == 0:
 #    accel.yaw = y / x
 
 #    return 1
+
 
 
 # return a array of 3 angle : first : roll 2nd : pitch , 3rd : yaw
