@@ -2,6 +2,8 @@ import math
 import logging
 from servo import Servo
 
+from imu_client import ImuClient
+
 
 class Antenna():
 
@@ -23,6 +25,19 @@ class Antenna():
         self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
         self.pitch_Servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
 
+        self.imu = ImuClient()
+        self.imu.start()
+
+    def updateIMU(self):
+        self.pitch = self.imu.pitch
+        self.yaw = self.imu.yaw
+
+    def close(self):
+        self.imu.kill = True
+
+    #
+    # TODO: WTF
+    #
     def arrow(self, arrow):
         if arrow == 0:
             self.wpitch += 5
@@ -45,13 +60,13 @@ class Antenna():
             self.lat, self.lon, self.uav_lat, self.uav_lon)
 
     def updatePitchFromGPS(self):
-        self.wpitch = self.pitch(
-            self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
+        self.wpitch = self.calculatePitch(self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
+        
 
     def magneticDeclinationUpdate(self):
         self.wyaw = self.wyaw - self.declination
 
-    def pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
+    def calculatePitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
         R = 6371000
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
@@ -59,15 +74,14 @@ class Antenna():
         long_drone = math.radians(long_drone)
         delta_long = long_drone - long_sat
         delta_lat = lat_drone - lat_sat
-        delta_alt = alt_drone - alt_sat
-        a = math.pow(math.sin(delta_lat / 2), 2) + math.cos(lat_sat) * \
-            math.cos(lat_drone) * math.pow(math.sin(delta_long / 2), 2)
-        c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+        delta_alt = alt_drone-alt_sat
+        a = math.pow(math.sin(delta_lat/2),2) + math.cos(lat_sat) * math.cos(lat_drone) * math.pow(math.sin(delta_long/2),2)
+        c = 2 * math.atan2(math.sqrt(a),math.sqrt(1-a))
         d = R * c
-        pitch_angle = math.atan2(delta_alt, d)
+        pitch_angle = math.atan2(delta_alt,d)
         pitch_angle = math.degrees(pitch_angle)
 
-        return pitch_angle
+        return pitch_angle    
 
     def pitchoffset(self, angle, pitchangleoffset):
         newpitch = angle

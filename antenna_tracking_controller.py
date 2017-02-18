@@ -6,6 +6,10 @@ import sys
 import Adafruit_PCA9685
 from antenna import Antenna
 from unmanned_aerial_vehicule import UnmannedAerialVehicule
+import time
+import os
+import imu_client
+from servo import Servo
 
 
 class AntennaTrackingController:
@@ -14,11 +18,9 @@ class AntennaTrackingController:
     LISTENING_IP = "0.0.0.0"
     LISTENING_PORT = 5008
     PMW_FREQUENCY = 60
-    SERVO_MINIMUM_POSITIVE_PULSE_LENGTH = 200
-    SERVO_MINIMUM_NEGATIVE_PULSE_LENGTH = 450
     SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946761
     SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5622961
-    SATELLITE_DISH_DEFAULT_ALTITUDE = 14
+    SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
     MAVLINK_GPS_ID = 33
 
     def __init__(self):
@@ -34,12 +36,18 @@ class AntennaTrackingController:
             AntennaTrackingController.LISTENING_PORT)
         self.uav.create_bind_socket()
 
-        # Antenna coordinates
-        self.antenna_latitude = self.SATELLITE_DISH_DEFAULT_LATITUDE
-        self.antenna_longitude = self.SATELLITE_DISH_DEFAULT_LONGITUDE
-        self.antenna_altitude = self.SATELLITE_DISH_DEFAULT_ALTITUDE
+        # Init servos
+        self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
+        self.pitch_servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
 
+        # Setup Antenna
         self.antenna = Antenna()
+
+        self.antenna.lat = self.SATELLITE_DISH_DEFAULT_LATITUDE
+        self.antenna.lon = self.SATELLITE_DISH_DEFAULT_LONGITUDE
+        self.antenna.alt = self.SATELLITE_DISH_DEFAULT_ALTITUDE
+
+        # Setup IMU
 
         while True:
             data, addr = self.uav.receive_telemetry()
@@ -48,23 +56,67 @@ class AntennaTrackingController:
             if drone_gps['packet_id'] != self.MAVLINK_GPS_ID:
                 continue
 
-            lat_drone = drone_gps['lat']
-            lon_drone = drone_gps['lon']
-            alt_drone = drone_gps['alt']
+            # Transfer UAV coordinates into the antenna
+
+            self.antenna.uav_alt = float(drone_gps["alt"]) / 1000
+            self.antenna.uav_lat = float(drone_gps["lat"]) / 10000000
+            self.antenna.uav_lon = float(drone_gps["lon"]) / 10000000
+
+            # Get IMU data
+            self.antenna.updateIMU()
+
+            self.antenna.updateYawFromGPS()
+            self.antenna.updatePitchFromGPS()
+
+            # Update servos
+            tick_yaw = self.yaw_servo.refresh(self.antenna.wyaw, self.antenna.yaw)
+            self.pwm.set_pwm(self.yaw_servo.channel, 0, tick_yaw)
+
+            tick_pitch = self.pitch_servo.refresh(
+                self.antenna.wpitch, self.antenna.pitch)
+            self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
+
+            time.sleep(0.2)
+
+            os.system("clear")
+
+            print("[UAV]")
+            print("\tLatitude\t" + str(drone_gps["lat"]))
+            print("\tLongitude\t" + str(drone_gps["lon"]))
+            print("\tAltitude\t" + str(drone_gps["alt"]))
+
+            print("[Antenna]")
+            print("\tLatitude\t" + str(self.antenna.lat))
+            print("\tLongitude\t" + str(self.antenna.lon))
+            print("\tAltitude\t" + str(self.antenna.alt))
+
+            print("[IMU]")
+            print("\tYaw\t\t" + str(self.antenna.yaw))
+            print("\tWanted yaw\t" + str(self.antenna.wyaw))
+            print("\tPitch\t\t" + str(self.antenna.pitch))
+            print("\tWanted pitch\t" + str(self.antenna.wpitch))
+
+            print("[Servos]")
+            print("\tYaw tick\t" + str(tick_yaw))
+            print("\tPitch tick\t" + str(tick_pitch))
 
     #
     # Gracefully stop antenna tracking controller
     #
     def stop(self):
         logging.info('Closing antenna tracking system')
-
+        self.antenna.close()
+        # todo un-hardcode 375
+        self.pwm.set_pwm(self.pitch_servo.channel, 0, int((self.pitch_servo.max_pwm - self.pitch_servo.min_pwm)/ 2 + self.pitch_servo.min_pwm))
+        self.pwm.set_pwm(self.yaw_servo.channel, 0, int((self.yaw_servo.max_pwm - self.yaw_servo.min_pwm)/ 2 + self.yaw_servo.min_pwm))
+    
     def get_gpsdata(self):
         data, addr = sock.recvfrom(1024)
         # print "gps_data:", data
 
-    def get_IMUdata(self):
-        IMU_data, addr = sock.recvfrom(1024)
-        pitch, yaw, roll = struct.unpack("ddd", IMU_data)
+    # def get_IMUdata(self):
+        #IMU_data, addr = sock.recvfrom(1024)
+        #pitch, yaw, roll = struct.unpack("ddd", IMU_data)
 
     def servo_move(pitch_drone, pitch_antenna, bearing_drone, bearing_antenna):
         delta_pitch = pitch_drone - pitch_antenna
