@@ -67,19 +67,7 @@ class AntennaTrackingController:
         # Setup IMU
 
         while True:
-            
-            #
-            t0 = time.time()
-
             data, addr = self.uav.receive_telemetry()
-            
-            #
-            t1 = time.time()
-
-            total = t1 - t0
-
-            print("Fetching time: " + str(total))
-
 
             drone_gps = json.loads(data)
 
