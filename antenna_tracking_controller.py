@@ -19,10 +19,9 @@ class AntennaTrackingController:
     # Constants
     LISTENING_IP = "0.0.0.0"
     LISTENING_PORT = 5008
-    PMW_FREQUENCY = 60
-
-    SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946761
-    SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5622961
+    PMW_FREQUENCY = 100
+    SATELLITE_DISH_DEFAULT_LATITUDE = 45.4939087
+    SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5630330
     SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
 
     MAVLINK_GPS_ID = 33
@@ -59,10 +58,29 @@ class AntennaTrackingController:
         self.antenna.lon = self.SATELLITE_DISH_DEFAULT_LONGITUDE
         self.antenna.alt = self.SATELLITE_DISH_DEFAULT_ALTITUDE
 
+        self.antenna.ReadImu(5)
+        self.antenna.Orientationoffset(self.antenna.yaw)
+
+        #
+        old_ms_boot_time = 0
+
         # Setup IMU
 
         while True:
+            
+            #
+            t0 = time.time()
+
             data, addr = self.uav.receive_telemetry()
+            
+            #
+            t1 = time.time()
+
+            total = t1 - t0
+
+            print("Fetching time: " + str(total))
+
+
             drone_gps = json.loads(data)
 
             if drone_gps['packet_id'] != self.MAVLINK_GPS_ID:
@@ -70,6 +88,8 @@ class AntennaTrackingController:
 
             # Transfer UAV coordinates into the antenna
 
+            print("Delta mavlink packets reception time: " + str(drone_gps["time_boot_ms"] - old_ms_boot_time))
+            old_ms_boot_time = drone_gps["time_boot_ms"]
             self.antenna.uav_alt = float(drone_gps["alt"]) / 1000
             self.antenna.uav_lat = float(drone_gps["lat"]) / 10000000
             self.antenna.uav_lon = float(drone_gps["lon"]) / 10000000
@@ -79,6 +99,8 @@ class AntennaTrackingController:
 
             self.antenna.updateYawFromGPS()
             self.antenna.updatePitchFromGPS()
+
+            self.antenna.angleoffsetcalc()
 
             # Update servos
             tick_yaw = self.yaw_servo.refresh(self.antenna.wyaw, self.antenna.yaw)
@@ -94,9 +116,9 @@ class AntennaTrackingController:
             os.system("clear")
 
             print("[UAV]")
-            print("\tLatitude\t" + str(drone_gps["lat"]))
-            print("\tLongitude\t" + str(drone_gps["lon"]))
-            print("\tAltitude\t" + str(drone_gps["alt"]))
+            print("\tLatitude\t" + str(self.antenna.uav_lat))
+            print("\tLongitude\t" + str(self.antenna.uav_lon))
+            print("\tAltitude\t" + str(self.antenna.uav_alt))
 
             print("[Antenna]")
             print("\tLatitude\t" + str(self.antenna.lat))
@@ -120,9 +142,11 @@ class AntennaTrackingController:
         logging.info('Closing antenna tracking system')
         self.antenna.close()
 
-        # todo un-hardcode 375
-        self.pwm.set_pwm(self.pitch_servo.channel, 0, int((self.pitch_servo.max_pwm - self.pitch_servo.min_pwm)/ 2 + self.pitch_servo.min_pwm))
-        self.pwm.set_pwm(self.yaw_servo.channel, 0, int((self.yaw_servo.max_pwm - self.yaw_servo.min_pwm)/ 2 + self.yaw_servo.min_pwm))
+        tick_yaw = 614
+        self.pwm.set_pwm(self.yaw_servo.channel, 0, tick_yaw)
+
+        tick_pitch = 614
+        self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
     
     def get_gpsdata(self):
         data, addr = sock.recvfrom(1024)

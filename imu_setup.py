@@ -40,31 +40,27 @@ if k == 0:
 
 
 # Read Imu number for X time and return the average value
-
-# def ReadImu(accel, x):
-
-#    r = 0
-#    p = 0
-#    y = 0
-#    i = 0
+def ReadImu(accel, x):
+    r = 0
+    p = 0
+    y = 0
+    i = 0
     # Collect IMU Data X times and calcue an average
-#    while i < x:
-#        if imu.IMURead():
+    while i < x:
+        if imu.IMURead():
+            data = imu.getIMUData()  # Read IMU data
+            fusionPose = data["fusionPose"]
+            #print("r: %f p: %f y: %f" %(math.degrees(fusionPose[0]), math.degrees(fusionPose[1]),math.degrees(fusionPose[2])))
+            r = r + math.degrees(fusionPose[0])
+            p = p + math.degrees(fusionPose[1])
+            y = y + math.degrees(fusionPose[2])
+            i = i + 1
 
-#            data = imu.getIMUData()  # Read IMU data
-#            fusionPose = data["fusionPose"]
-    # print("r: %f p: %f y: %f" %(math.degrees(fusionPose[0]),
-    # math.degrees(fusionPose[1]),math.degrees(fusionPose[2])))
-#            r = r + math.degrees(fusionPose[0])
-#            p = p + math.degrees(fusionPose[1])
-#            y = y + math.degrees(fusionPose[2])
-#            i = i + 1
+    accel.roll = r / x
+    accel.pitch = p / x
+    accel.yaw = y / x
 
-#    accel.roll = r / x
-#    accel.pitch = p / x
-#    accel.yaw = y / x
-
-#    return 1
+    return 1
 
 
 

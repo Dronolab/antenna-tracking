@@ -30,6 +30,9 @@ class Antenna():
         self.pitch = self.imu.pitch
         self.yaw = self.imu.yaw
 
+    def ReadImu(self, n):
+        self.imu.read_imu_n_time(n)
+
     def close(self):
         self.imu.kill = True
 
@@ -47,8 +50,8 @@ class Antenna():
         self.bearing_offset = bearing_offset
 
     def angleoffsetcalc(self):
-        self.yaw = self.bearing_offset(self.yaw, self.bearing_offset)
-        self.wyaw = self.bearing_offset(self.wyaw, self.bearing_offset)
+        self.yaw = self.calculate_bearing_offset(self.yaw, self.bearing_offset)
+        self.wyaw = self.calculate_bearing_offset(self.wyaw, self.bearing_offset)
 
     def update_yaw_from_gps(self):
         self.wyaw = self.bearing(
@@ -121,7 +124,7 @@ class Antenna():
         # bearing_360=(bearing_initial+360)%360
         return bearing_initial
 
-    def bearing_offset(self, angle, bearingangleoffset):
+    def calculate_bearing_offset(self, angle, bearingangleoffset):
         newbearing = angle
         newbearing -= bearingangleoffset
         if newbearing > 180:

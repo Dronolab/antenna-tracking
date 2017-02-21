@@ -5,7 +5,7 @@ import json
 
 class UnmannedAerialVehicule(threading.Thread):
 
-    TELEMETRY_BUFFER_SIZE = 4096
+    TELEMETRY_BUFFER_SIZE = 1024
 
     def __init__(self, ip, port):
         threading.Thread.__init__(self)
@@ -65,9 +65,10 @@ class UnmannedAerialVehicule(threading.Thread):
     def run(self):
         try:
             while True:
-                self.recieve_telemetry()
+                print("yolo")
+                self.receive_telemetry()
                 self.update_UAVgps()
-                self.update_UAVAttitude()
+                #self.update_UAVAttitude()
                 if self.kill:
                     break
         except KeyboardInterrupt:

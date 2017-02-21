@@ -21,7 +21,7 @@ class Servo():
         self.min_angle = min_angle
         self.max_angle = max_angle
         self.servo_frequency = servo_frequency
-        self.angle_tolerance = 5
+        self.angle_tolerance = 0
         self.channel = channel
         self.multiplicator = mul
 
@@ -50,6 +50,10 @@ class Servo():
             ticks = self.adafruitpwmvalue(self.hold_pwm, self.servo_frequency)
         return ticks
 
+        # 614 
+        #
+        #
+
     def adafruitpwmvalue(self, pwmvalue, pwmfrequency):
         pulse = pwmvalue * 1000
         pulse = pulse / 1000000
@@ -61,8 +65,7 @@ class Servo():
 
     def get_y(self, initval, slope, xval, mul):
         y = 0
-        y = (slope * mul) * xval
+        y = (slope * mul)  * 2 * xval
         y = y + initval
         y = math.fabs(y)
         return int(y)
-

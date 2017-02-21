@@ -32,3 +32,6 @@ class ImuClient (threading.Thread):
 
         except KeyboardInterrupt:
             pass
+
+    def read_imu_n_time(self, n):
+        imu_setup.ReadImu(self, n)
