@@ -7,15 +7,15 @@ import json
 class UnmannedAerialVehicule(threading.Thread):
 
     TELEMETRY_BUFFER_SIZE = 1024
+    LISTENING_IP = "0.0.0.0"
+    LISTENING_PORT = 5008
 
-    def __init__(self, ip, port):
+    def __init__(self):
         threading.Thread.__init__(self)
         self.lat = 0
         self.alt = 0
         self.lon = 0
         self.data = None
-        self.ip = ip
-        self.port = port
         self.telemetry_socket = None
         self.time_boot_ms = 0
         self.pitch = 0
@@ -47,21 +47,18 @@ class UnmannedAerialVehicule(threading.Thread):
             self.yaw = math.degrees(float(jsonStr['yaw']))
             self.roll = math.degrees(float(jsonStr['roll']))
 
-    def set_telemetry_IP(self, host_IP):
-        self.ip = host_IP
-
     def set_port(self, hostPort):
         self.port = hostPort
 
     def create_bind_socket(self):
         self.telemetry_socket = socket.socket(
             socket.AF_INET, socket.SOCK_DGRAM)
-        self.telemetry_socket.bind((self.ip, self.port))
+        self.telemetry_socket.bind((self.LISTENING_IP, self.LISTENING_PORT))
         logging.info("UAV Socket binded")
 
     def receive_telemetry(self):
         return self.telemetry_socket.recvfrom(
-            UnmannedAerialVehicule.TELEMETRY_BUFFER_SIZE)
+            self.TELEMETRY_BUFFER_SIZE)
 
     def run(self):
         try:

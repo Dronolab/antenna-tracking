@@ -6,81 +6,89 @@ from imu_client import ImuClient
 
 class Antenna():
 
+    # Hardcoded antenna position. Useful when GPS is unavailable
+    SATELLITE_DISH_DEFAULT_LATITUDE = 45.4939087
+    SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5630330
+    SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
+
+    # Hardcoded magnetic declination
+    MAGNETIC_DECLINATION = -14.52
+
     def __init__(self):
-        self.roll = 0
-        self.pitch = 0
-        self.yaw = 0
-        self.wyaw = 0
-        self.wpitch = 0
-        self.bearing_offset = 0
+        """ Constructor """
+
+        # Initialize magnetic declination
+        self.declination = self.MAGNETIC_DECLINATION
+
+        # Initialize GPS values
+        self.alt = self.SATELLITE_DISH_DEFAULT_ALTITUDE
+        self.lat = self.SATELLITE_DISH_DEFAULT_LATITUDE
+        self.lon = self.SATELLITE_DISH_DEFAULT_LONGITUDE
+
+        # Initialize UAV values
         self.uav_alt = 0
         self.uav_lon = 0
         self.uav_lat = 0
-        self.alt = 0
-        self.lon = 0
-        self.lat = 0
-        self.declination = -14.52
 
-        self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
-        self.pitch_Servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
+        # Initialize inertial measurement values
+        self.roll = 0
+        self.pitch = 0
+        self.yaw = 0
 
+        # Initialize target values
+        self.wyaw = 0
+        self.wpitch = 0
+
+        # Initialize IMU
         self.imu = ImuClient()
         self.imu.start()
 
-    def updateIMU(self):
+        # Initialize deadzone
+        self._read_imu(5)
+        self._bearing_offset = self.yaw
+
+    def update_imu(self):
+        """ Get newest values from imu module """
+
         self.pitch = self.imu.pitch
         self.yaw = self.imu.yaw
 
-    def ReadImu(self, n):
+    def _read_imu(self, n):
+        """ Get average next nth values from imu """
+
         self.imu.read_imu_n_time(n)
 
     def close(self):
+        """ Stop IMU module thread """
+
         self.imu.kill = True
 
-    def arrow(self, arrow):
-        if arrow == 0:
-            self.wpitch += 5
-        elif arrow == 1:
-            self.wyaw += 5
-        elif arrow == 2:
-            self.wpitch -= 5
-        elif arrow == 3:
-            self.wyaw -= 5
+    def update_angle_offset(self):
+        """ Update yaw and wanted yaw with bearing offset angle """
 
-    def Orientationoffset(self, bearing_offset):
-        self.bearing_offset = bearing_offset
-
-    def angleoffsetcalc(self):
-        self.yaw = self.calculate_bearing_offset(self.yaw, self.bearing_offset)
-        self.wyaw = self.calculate_bearing_offset(
-            self.wyaw, self.bearing_offset)
+        self.yaw = self._calculate_bearing_offset(
+            self.yaw, self._bearing_offset)
+        self.wyaw = self._calculate_bearing_offset(
+            self.wyaw, self._bearing_offset)
 
     def update_yaw_from_gps(self):
-        self.wyaw = self.bearing(
+        """ Update wanted yaw """
+
+        self.wyaw = self._calculate_bearing(
             self.lat, self.lon, self.uav_lat, self.uav_lon)
+
+        # Apply correction using magnetic declination angle
+        self.wyaw = self.wyaw - self.declination
 
     def update_pitch_from_gps(self):
-        self.wpitch = self.wanted_pitch(
+        """ Update wanted pitch """
+
+        self.wpitch = self._calculate_pitch(
             self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
 
-    def update_magnetic_declination(self):
-        self.wyaw = self.wyaw - self.declination
+    def _calculate_pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
+        """ Calculate the pitch using haversine formula """
 
-    def wanted_pitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
-        EARTH_RADIUS = 6371000
-
-    def updateYawFromGPS(self):
-        self.wyaw = self.bearing(
-            self.lat, self.lon, self.uav_lat, self.uav_lon)
-
-    def updatePitchFromGPS(self):
-        self.wpitch = self.calculatePitch(
-            self.lat, self.lon, self.alt, self.uav_lat, self.uav_lon, self.uav_alt)
-
-    def magneticDeclinationUpdate(self):
-        self.wyaw = self.wyaw - self.declination
-
-    def calculatePitch(self, lat_sat, long_sat, alt_sat, lat_drone, long_drone, alt_drone):
         R = 6371000
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
@@ -101,17 +109,9 @@ class Antenna():
 
         return pitch_angle
 
-    def pitchoffset(self, angle, pitchangleoffset):
-        newpitch = angle
-        newpitch -= bearingangleoffset
-        if newpitch > 180:
-            newpitch -= 360
-        if newbearing < -180:
-            newpitch += 360
+    def _calculate_bearing(self, lat_sat, long_sat, lat_drone, long_drone):
+        """ Calculate the bearing based on antenna and uav gps coordinates"""
 
-        return newbearing
-
-    def bearing(self, lat_sat, long_sat, lat_drone, long_drone):
         lat_sat = math.radians(lat_sat)
         lat_drone = math.radians(lat_drone)
         long_sat = math.radians(long_sat)
@@ -127,7 +127,13 @@ class Antenna():
         # bearing_360=(bearing_initial+360)%360
         return bearing_initial
 
-    def calculate_bearing_offset(self, angle, bearingangleoffset):
+    def _calculate_bearing_offset(self, angle, bearingangleoffset):
+        """ Calculate the bearing offset used to apply a deadzone.
+
+            It makes the antenna easier to operate because we don't
+            have to deal with tangled wires.
+        """
+
         newbearing = angle
         newbearing -= bearingangleoffset
         if newbearing > 180:

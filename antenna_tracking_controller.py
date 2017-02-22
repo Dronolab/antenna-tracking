@@ -14,54 +14,49 @@ from servo import Servo
 
 
 class AntennaTrackingController:
+    """ This class will controll all antenna calculation loop.
 
-    # Constants
-    LISTENING_IP = "0.0.0.0"
-    LISTENING_PORT = 5008
-    PMW_FREQUENCY = 100
-    SATELLITE_DISH_DEFAULT_LATITUDE = 45.4939087
-    SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5630330
-    SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
+        It has the responsability to ensure we can fetch all neccessary data in
+        order to make the system working properly
+    """
 
+    # Usually it's 60Hz but in this case we want it to go to 100Hz
+    PMW_FREQUENCY = 100  # Hz
+
+    # MAVLink packet id for GPS. See:
+    # https://pixhawk.ethz.ch/mavlink/#GLOBAL_POSITION_INT
     MAVLINK_GPS_ID = 33
 
     def __init__(self):
-        self.greeting()
+        """ Constructor """
+
         # Setting up the pwm
         self.pwm = Adafruit_PCA9685.PCA9685()
         self.pwm.set_pwm_freq(self.PMW_FREQUENCY)
 
-        # Entry point of Antenna GPS position
-        # gps_ = gpsreader('antgps.txt')
-
-        # Entry point of UAV GPS position
-        # uavtxt = gpsreader('uavgps.txt')
-
     def start(self):
+        """ Start execution of the main loop
+
+            This is the central point of the antenna tracking system. It put
+            all together the data and trigger calculations. Then a nice
+            output is given to STDOUT.
+        """
+
+        # Display some funky ascii
+        self.greeting()
+
         # Setup UAV
-        self.uav = UnmannedAerialVehicule(
-            AntennaTrackingController.LISTENING_IP,
-            AntennaTrackingController.LISTENING_PORT)
+        self.uav = UnmannedAerialVehicule()
         self.uav.create_bind_socket()
 
         # Init servos
         self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
         self.pitch_servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
 
-        # Setup Antenna
-        self.antenna = Antenna()
-
-        self.antenna.lat = self.SATELLITE_DISH_DEFAULT_LATITUDE
-        self.antenna.lon = self.SATELLITE_DISH_DEFAULT_LONGITUDE
-        self.antenna.alt = self.SATELLITE_DISH_DEFAULT_ALTITUDE
-
-        self.antenna.ReadImu(5)
-        self.antenna.Orientationoffset(self.antenna.yaw)
-
         #
-        old_ms_boot_time = 0
-
-        # Setup IMU
+        # Setup antenna tracking system
+        #
+        self.antenna = Antenna()
 
         while True:
             data, addr = self.uav.receive_telemetry()
@@ -72,21 +67,17 @@ class AntennaTrackingController:
                 continue
 
             # Transfer UAV coordinates into the antenna
-
-            print("Delta mavlink packets reception time: " +
-                  str(drone_gps["time_boot_ms"] - old_ms_boot_time))
-            old_ms_boot_time = drone_gps["time_boot_ms"]
             self.antenna.uav_alt = float(drone_gps["alt"]) / 1000
             self.antenna.uav_lat = float(drone_gps["lat"]) / 10000000
             self.antenna.uav_lon = float(drone_gps["lon"]) / 10000000
 
             # Get IMU data
-            self.antenna.updateIMU()
+            self.antenna.update_imu()
 
-            self.antenna.updateYawFromGPS()
-            self.antenna.updatePitchFromGPS()
+            self.antenna.update_yaw_from_gps()
+            self.antenna.update_pitch_from_gps()
 
-            self.antenna.angleoffsetcalc()
+            self.antenna.update_angle_offset()
 
             # Update servos
             tick_yaw = self.yaw_servo.refresh(
