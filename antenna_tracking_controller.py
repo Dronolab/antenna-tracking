@@ -13,7 +13,6 @@ import imu_client
 from servo import Servo
 
 
-
 class AntennaTrackingController:
 
     # Constants
@@ -45,11 +44,9 @@ class AntennaTrackingController:
             AntennaTrackingController.LISTENING_PORT)
         self.uav.create_bind_socket()
 
-
         # Init servos
         self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
         self.pitch_servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
-
 
         # Setup Antenna
         self.antenna = Antenna()
@@ -76,7 +73,8 @@ class AntennaTrackingController:
 
             # Transfer UAV coordinates into the antenna
 
-            print("Delta mavlink packets reception time: " + str(drone_gps["time_boot_ms"] - old_ms_boot_time))
+            print("Delta mavlink packets reception time: " +
+                  str(drone_gps["time_boot_ms"] - old_ms_boot_time))
             old_ms_boot_time = drone_gps["time_boot_ms"]
             self.antenna.uav_alt = float(drone_gps["alt"]) / 1000
             self.antenna.uav_lat = float(drone_gps["lat"]) / 10000000
@@ -91,8 +89,9 @@ class AntennaTrackingController:
             self.antenna.angleoffsetcalc()
 
             # Update servos
-            tick_yaw = self.yaw_servo.refresh(self.antenna.wyaw, self.antenna.yaw)
-            
+            tick_yaw = self.yaw_servo.refresh(
+                self.antenna.wyaw, self.antenna.yaw)
+
             self.pwm.set_pwm(self.yaw_servo.channel, 0, tick_yaw)
 
             tick_pitch = self.pitch_servo.refresh(
@@ -135,14 +134,14 @@ class AntennaTrackingController:
 
         tick_pitch = 614
         self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
-    
+
     def get_gpsdata(self):
         data, addr = sock.recvfrom(1024)
         print "gps_data:", data
 
     # def get_IMUdata(self):
-        #IMU_data, addr = sock.recvfrom(1024)
-        #pitch, yaw, roll = struct.unpack("ddd", IMU_data)
+    #    IMU_data, addr = sock.recvfrom(1024)
+    #    pitch, yaw, roll = struct.unpack("ddd", IMU_data)
 
     def servo_move(pitch_drone, pitch_antenna, bearing_drone, bearing_antenna):
         delta_pitch = pitch_drone - pitch_antenna

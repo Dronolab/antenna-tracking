@@ -3,6 +3,7 @@ import socket
 import logging
 import json
 
+
 class UnmannedAerialVehicule(threading.Thread):
 
     TELEMETRY_BUFFER_SIZE = 1024
@@ -68,7 +69,7 @@ class UnmannedAerialVehicule(threading.Thread):
                 print("yolo")
                 self.receive_telemetry()
                 self.update_UAVgps()
-                #self.update_UAVAttitude()
+                # self.update_UAVAttitude()
                 if self.kill:
                     break
         except KeyboardInterrupt:

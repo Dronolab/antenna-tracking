@@ -1,5 +1,6 @@
 import math
 
+
 class Servo():
 
     def __init__(self, min_angle, max_angle, min_pwm, max_pwm, hold_pwm,
@@ -10,7 +11,6 @@ class Servo():
             self.pulse_from_pwm(max_pwm, servo_frequency),
             min_angle,
             self.pulse_from_pwm(min_pwm, servo_frequency))
-
 
         self.init = self.pulse_from_pwm(hold_pwm, servo_frequency)
         self.current_angle = 0
@@ -50,7 +50,7 @@ class Servo():
             ticks = self.adafruitpwmvalue(self.hold_pwm, self.servo_frequency)
         return ticks
 
-        # 614 
+        # 614
         #
         #
 
@@ -65,7 +65,7 @@ class Servo():
 
     def get_y(self, initval, slope, xval, mul):
         y = 0
-        y = (slope * mul)  * 2 * xval
+        y = (slope * mul) * 2 * xval
         y = y + initval
         y = math.fabs(y)
         return int(y)
