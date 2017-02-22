@@ -6,7 +6,6 @@ import sys
 import Adafruit_PCA9685
 from antenna import Antenna
 from unmanned_aerial_vehicule import UnmannedAerialVehicule
-
 import time
 import os
 import imu_client
@@ -30,7 +29,7 @@ class AntennaTrackingController:
     def __init__(self):
         """ Constructor """
 
-        # Setting up the pwm
+        # Setup pwm
         self.pwm = Adafruit_PCA9685.PCA9685()
         self.pwm.set_pwm_freq(self.PMW_FREQUENCY)
 
@@ -47,7 +46,7 @@ class AntennaTrackingController:
 
         # Setup UAV
         self.uav = UnmannedAerialVehicule()
-        self.uav.create_bind_socket()
+        self.uav.start()
 
         # Init servos
         self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
@@ -59,35 +58,32 @@ class AntennaTrackingController:
         self.antenna = Antenna()
 
         while True:
-            data, addr = self.uav.receive_telemetry()
-
-            drone_gps = json.loads(data)
-
-            if drone_gps['packet_id'] != self.MAVLINK_GPS_ID:
-                continue
 
             # Transfer UAV coordinates into the antenna
-            self.antenna.uav_alt = float(drone_gps["alt"]) / 1000
-            self.antenna.uav_lat = float(drone_gps["lat"]) / 10000000
-            self.antenna.uav_lon = float(drone_gps["lon"]) / 10000000
+            self.antenna.uav_alt = self.uav.alt
+            self.antenna.uav_lat = self.uav.lat
+            self.antenna.uav_lon = self.uav.lon
 
             # Get IMU data
             self.antenna.update_imu()
 
             self.antenna.update_yaw_from_gps()
             self.antenna.update_pitch_from_gps()
-
             self.antenna.update_angle_offset()
 
-            # Update servos
+            # Update yaw servo
             tick_yaw = self.yaw_servo.refresh(
                 self.antenna.wyaw, self.antenna.yaw)
-
             self.pwm.set_pwm(self.yaw_servo.channel, 0, tick_yaw)
 
+            # Update pitch servo
             tick_pitch = self.pitch_servo.refresh(
                 self.antenna.wpitch, self.antenna.pitch)
             self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
+
+            #
+            # Print live data
+            #
 
             time.sleep(0.2)
 
@@ -97,11 +93,12 @@ class AntennaTrackingController:
             print("\tLatitude\t" + str(self.antenna.uav_lat))
             print("\tLongitude\t" + str(self.antenna.uav_lon))
             print("\tAltitude\t" + str(self.antenna.uav_alt))
+            print("\tLatency\t\t" + str(self.uav.latency) + "ms")
 
             print("[Antenna]")
             print("\tLatitude\t" + str(self.antenna.lat))
             print("\tLongitude\t" + str(self.antenna.lon))
-            print("\tAltitude\t" + str(self.antenna.alt))
+            print("\tAltitude\t" + str(self.antenna.alt) + "m")
 
             print("[IMU]")
             print("\tYaw\t\t" + str(self.antenna.yaw))
@@ -113,32 +110,26 @@ class AntennaTrackingController:
             print("\tYaw tick\t" + str(tick_yaw))
             print("\tPitch tick\t" + str(tick_pitch))
 
-    #
-    # Gracefully stop antenna tracking controller
-    #
     def stop(self):
-        logging.info('Closing antenna tracking system')
-        self.antenna.close()
+        """ Gracefully stop antenna tracking controller """
 
+        logging.info('Closing antenna tracking system')
+
+        # Close threads
+        self.antenna.close()
+        self.uav.close()
+
+        # Set yaw servo to neutral position (will stop the servo movement)
         tick_yaw = 614
         self.pwm.set_pwm(self.yaw_servo.channel, 0, tick_yaw)
 
+        # Set pitch servo to neutral position (will stop the servo movement)
         tick_pitch = 614
         self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
 
-    def get_gpsdata(self):
-        data, addr = sock.recvfrom(1024)
-        print "gps_data:", data
-
-    # def get_IMUdata(self):
-    #    IMU_data, addr = sock.recvfrom(1024)
-    #    pitch, yaw, roll = struct.unpack("ddd", IMU_data)
-
-    def servo_move(pitch_drone, pitch_antenna, bearing_drone, bearing_antenna):
-        delta_pitch = pitch_drone - pitch_antenna
-        delta_bearing = bearing_drone - bearing_antenna
-
     def greeting(self):
+        """ Welcome message """
+
         print("""
   ___        _                           _                  _    _
  / _ \      | |                         | |                | |  (_)

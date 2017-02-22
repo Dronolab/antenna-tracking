@@ -23,54 +23,37 @@ class UnmannedAerialVehicule(threading.Thread):
         self.roll = 0
         self.kill = False
 
-    def uav_altitude(self):
-        return self.alt
-
-    def uav_latitude(self):
-        return self.lat
-
-    def uav_longitude(self):
-        return self.lon
-
-    def update_UAVgps(self):
-        jsonStr = json.loads(self.data)
-        if float(jsonStr['packet_id']) == 33:
-            self.alt = float(jsonStr['alt']) / 1000
-            self.lat = float(jsonStr['lat']) / 10000000
-            self.lon = float(jsonStr['lon']) / 10000000
-
-    def update_UAVAttitude(self):
-        jsonStr = json.loads(self.data)
-        if float(jsonStr['packet_id']) == 30:
-            self.time_boot_ms = float(jsonStr['time_boot_ms'])
-            self.pitch = math.degrees(float(jsonStr['pitch']))
-            self.yaw = math.degrees(float(jsonStr['yaw']))
-            self.roll = math.degrees(float(jsonStr['roll']))
-
-    def set_port(self, hostPort):
-        self.port = hostPort
-
-    def create_bind_socket(self):
-        self.telemetry_socket = socket.socket(
-            socket.AF_INET, socket.SOCK_DGRAM)
-        self.telemetry_socket.bind((self.LISTENING_IP, self.LISTENING_PORT))
-        logging.info("UAV Socket binded")
-
-    def receive_telemetry(self):
-        return self.telemetry_socket.recvfrom(
-            self.TELEMETRY_BUFFER_SIZE)
+        self.delta = 0
+        self.latency = 0
 
     def run(self):
         try:
+            # Bind socket
+            self.telemetry_socket = socket.socket(
+                socket.AF_INET, socket.SOCK_DGRAM)
+            self.telemetry_socket.bind(
+                (self.LISTENING_IP, self.LISTENING_PORT))
+            logging.info("UAV Socket binded")
+
             while True:
-                print("yolo")
-                self.receive_telemetry()
-                self.update_UAVgps()
-                # self.update_UAVAttitude()
+
+                # Get telemetry data
+                self.data, addr = self.telemetry_socket.recvfrom(
+                    self.TELEMETRY_BUFFER_SIZE)
+
+                # Format into json
+                telemetry_json = json.loads(self.data)
+                if float(telemetry_json['packet_id']) == 33:
+                    self.alt = float(telemetry_json['alt']) / 1000
+                    self.lat = float(telemetry_json['lat']) / 10000000
+                    self.lon = float(telemetry_json['lon']) / 10000000
+
+                    self.latency = telemetry_json['time_boot_ms'] - self.delta
+                    self.delta = telemetry_json['time_boot_ms']
                 if self.kill:
                     break
         except KeyboardInterrupt:
             self.kill = True
 
-    def __del__(self):
+    def close(self):
         self.telemetry_socket.close()
