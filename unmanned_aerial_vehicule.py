@@ -27,21 +27,43 @@ class UnmannedAerialVehicule(threading.Thread):
         self.delta = 0
         self.latency = 0
 
+        self.ready = True
+
+        self.connection_failure = False
+
+        # Bind socket
+        try:
+            self.telemetry_socket = socket.socket(
+                socket.AF_INET, socket.SOCK_DGRAM)
+            self.telemetry_socket.settimeout(1)
+            self.telemetry_socket.bind(
+                (self.LISTENING_IP, self.LISTENING_PORT))
+
+            self.data, addr = self.telemetry_socket.recvfrom(
+                self.TELEMETRY_BUFFER_SIZE)
+
+            logging.info("UAV Socket binded")
+        except socket.error:
+            logging.error(
+                "UAV connection failed to initialize. Please check MAVProxy or your network connection")
+            self.ready = False
+
     def run(self):
         """ Thread callback. Will fetch UAV GPS coordinates """
         try:
-            # Bind socket
-            self.telemetry_socket = socket.socket(
-                socket.AF_INET, socket.SOCK_DGRAM)
-            self.telemetry_socket.bind(
-                (self.LISTENING_IP, self.LISTENING_PORT))
-            logging.info("UAV Socket binded")
-
-            while True:
+            while self.ready:
 
                 # Get telemetry data
-                self.data, addr = self.telemetry_socket.recvfrom(
-                    self.TELEMETRY_BUFFER_SIZE)
+                try:
+                    self.data, addr = self.telemetry_socket.recvfrom(
+                        self.TELEMETRY_BUFFER_SIZE)
+
+                    if self.connection_failure:
+                        self.connection_failure = False
+                        logging.info("Connection regained")
+                except socket.error:
+                    self.connection_failure = True
+                    logging.error("Connection loss")
 
                 # Format into json
                 telemetry_json = json.loads(self.data)

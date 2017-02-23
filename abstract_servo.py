@@ -3,7 +3,7 @@ import math
 
 class AbstractServo():
 
-    def __init__(self, min_angle, max_angle, min_pwm, max_pwm, hold_pwm,
+    def __init__(self, min_angle, max_angle, min_pwm, max_pwm,
                  servo_frequency, channel, mul):
 
         self.delta = self._getDelta(
@@ -12,12 +12,12 @@ class AbstractServo():
             min_angle,
             self._pulse_from_pwm(min_pwm, servo_frequency))
 
-        self.init = self._pulse_from_pwm(hold_pwm, servo_frequency)
+        self.hold_pwm = (max_pwm - min_pwm) / 2.0 + min_pwm
+        self.init = self._pulse_from_pwm(self.hold_pwm, servo_frequency)
         self.current_angle = 0
         self.desired_angle = 0
         self.min_pwm = min_pwm
         self.max_pwm = max_pwm
-        self.hold_pwm = hold_pwm
         self.min_angle = min_angle
         self.max_angle = max_angle
         self.servo_frequency = servo_frequency

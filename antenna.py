@@ -1,6 +1,11 @@
 import math
+import os
 import logging
+import Adafruit_PCA9685
 from imu_client import ImuClient
+from unmanned_aerial_vehicule import UnmannedAerialVehicule
+from yaw_servo import YawServo
+from pitch_servo import PitchServo
 
 
 class Antenna():
@@ -10,11 +15,19 @@ class Antenna():
     SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5630330
     SATELLITE_DISH_DEFAULT_ALTITUDE = 14.0
 
+    # Usually it's 60Hz but in this case we want it to go to 100Hz
+    PMW_FREQUENCY = 100  # Hz
+
     # Hardcoded magnetic declination
     MAGNETIC_DECLINATION = -14.52
 
     def __init__(self):
         """ Constructor """
+
+        logging.info(
+            'Started Antenna tracking system. Beginning initialization...')
+
+        self.ready = False
 
         # Initialize magnetic declination
         self.declination = self.MAGNETIC_DECLINATION
@@ -43,6 +56,28 @@ class Antenna():
         self.imu.start()
         self.imu_latency = 0
 
+        # Setup UAV
+        self.uav = UnmannedAerialVehicule()
+        self.uav.start()
+
+        # Setup pwm
+        self._pwm = Adafruit_PCA9685.PCA9685()
+        self._pwm.set_pwm_freq(self.PMW_FREQUENCY)
+
+        # Init servos
+        self.yaw_servo = YawServo(-180, 180, 1.1, 1.9, 100, 0, 0.8)
+        self.pitch_servo = PitchServo(0, 90, 1.1, 1.9, 100, 1, 0.5)
+
+        # Health check on every component
+        if self.imu.ready and self.uav.ready:
+            self.ready = True
+
+        print(self.ready)
+
+        if self.ready:
+            logging.info(
+                'Antenna tracking system successfully started. Ctrl-C to stop...')
+
         # Initialize deadzone
         self._read_imu(5)
         self._bearing_offset = self.yaw
@@ -61,8 +96,38 @@ class Antenna():
 
     def close(self):
         """ Stop IMU module thread """
-
         self.imu.kill = True
+
+        self.uav.close()
+
+        # Set yaw servo to neutral position (will stop the servo movement)
+        self.tick_yaw = 614
+        self._pwm.set_pwm(self.yaw_servo.channel, 0, self.tick_yaw)
+
+        # Set pitch servo to neutral position (will stop the servo movement)
+        self.tick_pitch = 614
+        self._pwm.set_pwm(self.pitch_servo.channel, 0, self.tick_pitch)
+
+    def update_target_orientation(self):
+        # Transfer UAV coordinates into the antenna
+        self.uav_alt = self.uav.alt
+        self.uav_lat = self.uav.lat
+        self.uav_lon = self.uav.lon
+
+        self.update_imu()
+        self.update_yaw_from_gps()
+        self.update_pitch_from_gps()
+        self.update_angle_offset()
+
+        # Update yaw servo
+        self.tick_yaw = self.yaw_servo.refresh(
+            self.wyaw, self.yaw)
+        self._pwm.set_pwm(self.yaw_servo.channel, 0, self.tick_yaw)
+
+        # Update pitch servo
+        self.tick_pitch = self.pitch_servo.refresh(
+            self.wpitch, self.pitch)
+        self._pwm.set_pwm(self.pitch_servo.channel, 0, self.tick_pitch)
 
     def update_angle_offset(self):
         """ Update yaw and wanted yaw with bearing offset angle """
@@ -140,3 +205,29 @@ class Antenna():
             newbearing += 360
 
         return newbearing
+
+    def print_current_data(self):
+        os.system("clear")
+
+        print("[UAV]")
+        print("\tLatitude\t" + str(self.uav_lat))
+        print("\tLongitude\t" + str(self.uav_lon))
+        print("\tAltitude\t" + str(self.uav_alt))
+        print("\tLatency\t\t" + str(self.uav.latency) + "ms")
+
+        print("[Antenna]")
+        print("\tLatitude\t" + str(self.lat))
+        print("\tLongitude\t" + str(self.lon))
+        print("\tAltitude\t" + str(self.alt) + "m")
+
+        print("[IMU]")
+        print("\tYaw\t\t" + str(self.yaw))
+        print("\tWanted yaw\t" + str(self.wyaw))
+        print("\tPitch\t\t" + str(self.pitch))
+        print("\tWanted pitch\t" + str(self.wpitch))
+        print("\tLatency\t\t" +
+              "{0:.2f}".format(round(self.imu_latency, 2)) + "ms")
+
+        print("[Servos]")
+        print("\tYaw tick\t" + str(self.tick_yaw))
+        print("\tPitch tick\t" + str(self.tick_pitch))

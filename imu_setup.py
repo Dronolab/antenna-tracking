@@ -6,20 +6,22 @@ import time
 import math
 import logging
 
+imu_init_success = True
+
 # IMU init
 k = 0
 if k == 0:
     SETTINGS_FILE = "RTIMULib"
 
     if not os.path.exists(SETTINGS_FILE + ".ini"):
-        print("Settings file does not esist, will be created")
+        imu_init_success = False
+        print("Settings file does not exist, will be created")
 
     s = RTIMU.Settings(SETTINGS_FILE)
     imu = RTIMU.RTIMU(s)
 
     if (not imu.IMUInit()):
-        print ("IMU Init Failed")
-        sys.exit(1)
+        imu_init_success = False
 
     imu.setSlerpPower(0.02)
     imu.setGyroEnable(True)

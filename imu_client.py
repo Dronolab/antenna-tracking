@@ -18,6 +18,13 @@ class ImuClient (threading.Thread):
         self.pitch = 0
         self.kill = False
         self.latency = 0
+        self.ready = imu_setup.imu_init_success
+
+        if self.ready:
+            logging.info("IMU started successfully")
+        else:
+            logging.error(
+                "IMU failed to initialize. Please check imu_setup.py or the MPU-92/65 unit")
 
     def run(self):
         try:
