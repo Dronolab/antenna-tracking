@@ -1,6 +1,5 @@
 import math
 import logging
-from servo import Servo
 from imu_client import ImuClient
 
 

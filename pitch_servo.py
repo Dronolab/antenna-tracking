@@ -1,7 +1,7 @@
-from servo import Servo
+from abstract_servo import AbstractServo
 
 
-class PitchServo(Servo):
+class PitchServo(AbstractServo):
 
     def refresh(self, WantedAngle, CurrentAngle):
         AngleCorrection = (WantedAngle - CurrentAngle)

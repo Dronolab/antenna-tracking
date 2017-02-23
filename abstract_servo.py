@@ -1,0 +1,51 @@
+import math
+
+
+class AbstractServo():
+
+    def __init__(self, min_angle, max_angle, min_pwm, max_pwm, hold_pwm,
+                 servo_frequency, channel, mul):
+
+        self.delta = self._getDelta(
+            max_angle,
+            self._pulse_from_pwm(max_pwm, servo_frequency),
+            min_angle,
+            self._pulse_from_pwm(min_pwm, servo_frequency))
+
+        self.init = self._pulse_from_pwm(hold_pwm, servo_frequency)
+        self.current_angle = 0
+        self.desired_angle = 0
+        self.min_pwm = min_pwm
+        self.max_pwm = max_pwm
+        self.hold_pwm = hold_pwm
+        self.min_angle = min_angle
+        self.max_angle = max_angle
+        self.servo_frequency = servo_frequency
+        self.angle_tolerance = 0
+        self.channel = channel
+        self.multiplicator = mul
+
+    def _getDelta(self, x1, y1, x2, y2):
+        slope = float(y2 - y1) / float(x2 - x1)
+        return slope
+
+    def _pulse_from_pwm(self, pwmvalue, pwmfrequency):
+        pulse = pwmvalue * 1000
+        pulse = pulse / 1000000
+        pulse = pulse * pwmfrequency
+        pulse = pulse * 4096
+
+        pulse = int(pulse)
+        return pulse
+
+    def refresh(self, WantedAngle, CurrentAngle):
+        """ This method must be implemented by extending this class """
+
+        raise NotImplementedError()
+
+    def get_y(self, initval, slope, xval, mul):
+        y = 0
+        y = (slope * mul) * xval
+        y = y + initval
+        y = math.fabs(y)
+        return int(y)

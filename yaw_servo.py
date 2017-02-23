@@ -1,7 +1,7 @@
-from servo import Servo
+from abstract_servo import AbstractServo
 
 
-class YawServo(Servo):
+class YawServo(AbstractServo):
 
     def refresh(self, WantedAngle, CurrentAngle):
 
