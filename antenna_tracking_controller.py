@@ -9,7 +9,8 @@ from unmanned_aerial_vehicule import UnmannedAerialVehicule
 import time
 import os
 import imu_client
-from servo import Servo
+from yaw_servo import YawServo
+from pitch_servo import PitchServo
 
 
 class AntennaTrackingController:
@@ -49,8 +50,8 @@ class AntennaTrackingController:
         self.uav.start()
 
         # Init servos
-        self.yaw_servo = Servo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
-        self.pitch_servo = Servo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
+        self.yaw_servo = YawServo(-180, 180, 1.1, 1.9, 1.5, 100, 0, 0.8)
+        self.pitch_servo = PitchServo(0, 90, 1.1, 1.9, 1.5, 100, 1, 0.5)
 
         #
         # Setup antenna tracking system
@@ -78,7 +79,7 @@ class AntennaTrackingController:
 
             # Update pitch servo
             tick_pitch = self.pitch_servo.refresh(
-                self.antenna.wpitch, self.antenna.pitch, True)
+                self.antenna.wpitch, self.antenna.pitch)
             self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
 
             #

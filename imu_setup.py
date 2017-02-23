@@ -11,22 +11,15 @@ k = 0
 if k == 0:
     SETTINGS_FILE = "RTIMULib"
 
-    #print ("Using settings file" + SETTINGS_FILE + ".ini")
-
     if not os.path.exists(SETTINGS_FILE + ".ini"):
-
         print("Settings file does not esist, will be created")
 
     s = RTIMU.Settings(SETTINGS_FILE)
     imu = RTIMU.RTIMU(s)
 
-    #print ("IMU Name : " + imu.IMUName())
-
     if (not imu.IMUInit()):
         print ("IMU Init Failed")
         sys.exit(1)
-    # else:
-        #print("IMU Init Succeeded")
 
     imu.setSlerpPower(0.02)
     imu.setGyroEnable(True)
@@ -34,12 +27,12 @@ if k == 0:
     imu.setCompassEnable(True)
 
     poll_interval = imu.IMUGetPollInterval()
-    #print("Recommended Poll Interval: %dmS\n" % poll_interval)
 
     k = 1
 
-
 # Read Imu number for X time and return the average value
+
+
 def ReadImu(accel, x):
     r = 0
     p = 0

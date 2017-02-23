@@ -11,6 +11,7 @@ class UnmannedAerialVehicule(threading.Thread):
     LISTENING_PORT = 5008
 
     def __init__(self):
+        """ Constructor """
         threading.Thread.__init__(self)
         self.lat = 0
         self.alt = 0
@@ -27,6 +28,7 @@ class UnmannedAerialVehicule(threading.Thread):
         self.latency = 0
 
     def run(self):
+        """ Thread callback. Will fetch UAV GPS coordinates """
         try:
             # Bind socket
             self.telemetry_socket = socket.socket(
@@ -57,4 +59,5 @@ class UnmannedAerialVehicule(threading.Thread):
             self.kill = True
 
     def close(self):
+        """ Trigger thread closure """
         self.kill = True

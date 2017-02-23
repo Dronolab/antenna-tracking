@@ -123,10 +123,7 @@ class Antenna():
         y = math.sin(delta_long) * math.cos(lat_drone)
         x = math.cos(lat_sat) * math.sin(lat_drone) - \
             math.sin(lat_sat) * math.cos(lat_drone) * math.cos(delta_long)
-        # plage de -180 a 180
         bearing_initial = math.degrees(math.atan2(y, x))
-        # Pour le mettre dans le plage de 0 a 360
-        # bearing_360=(bearing_initial+360)%360
         return bearing_initial
 
     def _calculate_bearing_offset(self, angle, bearingangleoffset):
