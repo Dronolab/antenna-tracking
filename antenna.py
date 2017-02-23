@@ -42,6 +42,7 @@ class Antenna():
         # Initialize IMU
         self.imu = ImuClient()
         self.imu.start()
+        self.imu_latency = 0
 
         # Initialize deadzone
         self._read_imu(5)
@@ -52,6 +53,7 @@ class Antenna():
 
         self.pitch = self.imu.pitch
         self.yaw = self.imu.yaw
+        self.imu_latency = self.imu.latency
 
     def _read_imu(self, n):
         """ Get average next nth values from imu """

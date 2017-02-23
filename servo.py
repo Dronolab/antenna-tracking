@@ -41,18 +41,20 @@ class Servo():
         pulse = int(pulse)
         return pulse
 
-    def refresh(self, WantedAngle, CurrentAngle):
+    def refresh(self, WantedAngle, CurrentAngle, reverse=False):
+
         AngleCorrection = (WantedAngle - CurrentAngle)
+
+        if reverse:
+            AngleCorrection = -AngleCorrection
+
         if abs(AngleCorrection) >= self.angle_tolerance:
             ticks = self.get_y(self.init, self.delta,
                                AngleCorrection, self.multiplicator)
         else:
             ticks = self.adafruitpwmvalue(self.hold_pwm, self.servo_frequency)
-        return ticks
 
-        # 614
-        #
-        #
+        return ticks
 
     def adafruitpwmvalue(self, pwmvalue, pwmfrequency):
         pulse = pwmvalue * 1000
@@ -65,7 +67,7 @@ class Servo():
 
     def get_y(self, initval, slope, xval, mul):
         y = 0
-        y = (slope * mul) * 2 * xval
+        y = (slope * mul) * xval
         y = y + initval
         y = math.fabs(y)
         return int(y)

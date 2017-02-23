@@ -17,11 +17,16 @@ class ImuClient (threading.Thread):
         self.yaw = 0
         self.pitch = 0
         self.kill = False
+        self.latency = 0
 
     def run(self):
         try:
             while True:
+                t0 = time.time()
                 fusionPose = imu_setup.ReadSingleIMU()
+                t1 = time.time()
+                self.latency = (t1 - t0) * 1000
+
                 if fusionPose is not None:
                     self.roll = math.degrees(fusionPose[0])
                     self.pitch = math.degrees(fusionPose[1])

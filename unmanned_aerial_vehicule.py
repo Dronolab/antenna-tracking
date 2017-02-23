@@ -51,9 +51,10 @@ class UnmannedAerialVehicule(threading.Thread):
                     self.latency = telemetry_json['time_boot_ms'] - self.delta
                     self.delta = telemetry_json['time_boot_ms']
                 if self.kill:
+                    self.telemetry_socket.close()
                     break
         except KeyboardInterrupt:
             self.kill = True
 
     def close(self):
-        self.telemetry_socket.close()
+        self.kill = True

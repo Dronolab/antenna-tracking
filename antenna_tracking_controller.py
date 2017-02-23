@@ -78,7 +78,7 @@ class AntennaTrackingController:
 
             # Update pitch servo
             tick_pitch = self.pitch_servo.refresh(
-                self.antenna.wpitch, self.antenna.pitch)
+                self.antenna.wpitch, self.antenna.pitch, True)
             self.pwm.set_pwm(self.pitch_servo.channel, 0, tick_pitch)
 
             #
@@ -105,6 +105,8 @@ class AntennaTrackingController:
             print("\tWanted yaw\t" + str(self.antenna.wyaw))
             print("\tPitch\t\t" + str(self.antenna.pitch))
             print("\tWanted pitch\t" + str(self.antenna.wpitch))
+            print("\tLatency\t\t" +
+                  "{0:.2f}".format(round(self.antenna.imu_latency, 2)) + "ms")
 
             print("[Servos]")
             print("\tYaw tick\t" + str(tick_yaw))
