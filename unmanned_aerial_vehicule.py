@@ -35,7 +35,7 @@ class UnmannedAerialVehicule(threading.Thread):
         try:
             self.telemetry_socket = socket.socket(
                 socket.AF_INET, socket.SOCK_DGRAM)
-            self.telemetry_socket.settimeout(1)
+            self.telemetry_socket.settimeout(10)
             self.telemetry_socket.bind(
                 (self.LISTENING_IP, self.LISTENING_PORT))
 
@@ -68,7 +68,7 @@ class UnmannedAerialVehicule(threading.Thread):
                 # Format into json
                 telemetry_json = json.loads(self.data)
                 if float(telemetry_json['packet_id']) == 33:
-                    self.alt = float(telemetry_json['alt']) / 1000
+                    self.alt = float(telemetry_json['relative_alt']) / 1000
                     self.lat = float(telemetry_json['lat']) / 10000000
                     self.lon = float(telemetry_json['lon']) / 10000000
 

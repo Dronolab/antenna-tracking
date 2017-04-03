@@ -14,7 +14,7 @@ class Antenna():
     # Hardcoded antenna position. Useful when GPS is unavailable
     SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946532
     SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5627038
-    SATELLITE_DISH_DEFAULT_ALTITUDE = 20.0
+    SATELLITE_DISH_DEFAULT_ALTITUDE = 80
 
     # Usually it's 60Hz but in this case we want it to go to 100Hz
     PMW_FREQUENCY = 100  # Hz
@@ -40,6 +40,10 @@ class Antenna():
 
         self.gps_client = GPSClient()
         self.gps_client.GPS_coordinate_avg(5)
+
+	self.alt = self.gps_client.alt
+        self.lat = self.gps_client.lat
+        self.lon = self.gps_client.lon
 
         print("LAT: " + str(self.gps_client.lat))
         print("ALT: " + str(self.gps_client.alt))
