@@ -22,7 +22,7 @@ class AntennaTrackingController:
     def __init__(self):
         """ Constructor """
 
-    def start(self, verbose=True):
+    def start(self, verbose=True, use_internal_gps=False):
         """ Start execution of the main loop
 
             This is the central point of the antenna tracking system. It put
@@ -34,7 +34,7 @@ class AntennaTrackingController:
         self.greeting()
 
         # Setup antenna tracking system
-        self.antenna = Antenna()
+        self.antenna = Antenna(use_internal_gps)
 
         if self.antenna.ready:
             while True:

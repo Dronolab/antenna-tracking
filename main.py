@@ -5,6 +5,8 @@ import logging
 from antenna_tracking_controller import AntennaTrackingController
 
 if __name__ == '__main__':
+    verbose_mode = True
+    use_internal_gps = True
 
     # Setup log configuration
     logging.basicConfig(
@@ -15,7 +17,7 @@ if __name__ == '__main__':
     atc = AntennaTrackingController()
 
     try:
-        atc.start()
+        atc.start(verbose=verbose_mode, use_internal_gps=use_internal_gps)
     except KeyboardInterrupt:
         print('\r')
         atc.stop()

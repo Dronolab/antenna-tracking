@@ -7,6 +7,8 @@ from gps_client import GPSClient
 from unmanned_aerial_vehicule import UnmannedAerialVehicule
 from yaw_servo import YawServo
 from pitch_servo import PitchServo
+from manual_override import ManualOverride
+import time
 
 
 class Antenna():
@@ -14,7 +16,7 @@ class Antenna():
     # Hardcoded antenna position. Useful when GPS is unavailable
     SATELLITE_DISH_DEFAULT_LATITUDE = 45.4946532
     SATELLITE_DISH_DEFAULT_LONGITUDE = -73.5627038
-    SATELLITE_DISH_DEFAULT_ALTITUDE = 80
+    SATELLITE_DISH_DEFAULT_ALTITUDE = 0
 
     # Usually it's 60Hz but in this case we want it to go to 100Hz
     PMW_FREQUENCY = 100  # Hz
@@ -22,7 +24,10 @@ class Antenna():
     # Hardcoded magnetic declination
     MAGNETIC_DECLINATION = -14.46667
 
-    def __init__(self):
+    # Alma airport magnetic declination
+    # MAGNETIC_DECLINATION = -16.41667
+
+    def __init__(self, use_internal_gps=False):
         """ Constructor """
 
         logging.info(
@@ -37,17 +42,6 @@ class Antenna():
         self.alt = self.SATELLITE_DISH_DEFAULT_ALTITUDE
         self.lat = self.SATELLITE_DISH_DEFAULT_LATITUDE
         self.lon = self.SATELLITE_DISH_DEFAULT_LONGITUDE
-
-        self.gps_client = GPSClient()
-        self.gps_client.GPS_coordinate_avg(5)
-
-	self.alt = self.gps_client.alt
-        self.lat = self.gps_client.lat
-        self.lon = self.gps_client.lon
-
-        print("LAT: " + str(self.gps_client.lat))
-        print("ALT: " + str(self.gps_client.alt))
-        print("LON: " + str(self.gps_client.lon))
 
         # Initialize UAV values
         self.uav_alt = 0
@@ -72,6 +66,18 @@ class Antenna():
         self.uav = UnmannedAerialVehicule()
         self.uav.start()
 
+        if use_internal_gps:
+            logging.info('Fetching internal GPS')
+            self.gps_client = GPSClient()
+            self.gps_client.GPS_coordinate_avg(5)
+            self.alt = self.gps_client.alt
+            self.lat = self.gps_client.lat
+            self.lon = self.gps_client.lon
+
+        logging.info("Longitude: {}".format(self.lon))
+        logging.info("Latitude: {}".format(self.lat))
+        logging.info("Altitude: {}".format(self.alt))
+
         self.is_pwm_ready = False
 
         # Setup pwm
@@ -81,11 +87,16 @@ class Antenna():
             self.is_pwm_ready = True
         except IOError:
             logging.error(
-                "PWM module failed to initialize. Please check if the adafruit hat is plugged in the Raspberry Pi GPIO pins.")
+                "PWM module failed to initialize. Please check if the adafruit \
+                 hat is plugged in the Raspberry Pi GPIO pins.")
 
         # Init servos
         self.yaw_servo = YawServo(-180, 180, 1.1, 1.9, 100, 0, 0.8)
         self.pitch_servo = PitchServo(0, 90, 1.1, 1.9, 100, 1, 0.5)
+
+        # Setup manual override
+        # self.manual_override = ManualOverride()
+        # self.manual_override.start()
 
         # Health check on every component
         if self.imu.ready and self.uav.ready and self.is_pwm_ready:
@@ -116,7 +127,11 @@ class Antenna():
         """ Stop IMU module thread """
         self.imu.kill = True
 
+        """ Stop UAV module thread """
         self.uav.close()
+
+        """ Stop manual override thread """
+        # self.manual_override.close()
 
         if not self.is_pwm_ready:
             return
@@ -139,6 +154,12 @@ class Antenna():
         self.update_yaw_from_gps()
         self.update_pitch_from_gps()
         self.update_angle_offset()
+
+        # Manual override of servos
+
+        ########
+        # TODO #
+        ########
 
         # Update yaw servo
         self.tick_yaw = self.yaw_servo.refresh(

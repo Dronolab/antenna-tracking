@@ -5,19 +5,45 @@ A tool to manage Dronolab's Antenna Tracking system.
 
 Install [RTIMULib2](https://github.com/richardstechnotes/RTIMULib2)
 
-## Run
-```shell
+## USC Student Competition Setup
 
-git clone https://github.com/Dronolab/antenna-tracking.git
-cd antenna-tracking
+PREPARATION
+Aller dans antenna.py et changer la déclinaison magnétique pour celle de l'aéroport d'Alma
 
-# Do this only once
-sudo killall gpsd
-sudo gpsd /dev/tty/AMA0 -F /var/run/gpsd.sock
+```python
+# Hardcoded magnetic declination
+MAGNETIC_DECLINATION = -14.46667
 
-python main.py
-
+# Alma airport magnetic declination
+# `AGNETIC_DECLINATION = -16.41667
 ```
+
+ON-SITE 
+1. Démarrer le GPS (je ne sais pas pourquoi mais sur la PI le deamon ne fonctionne pas en background)
+```$ ssh pi@192.168.1.81```
+```$ sudo gpsd -b -N -D 3 -F /var/run/gpsd.sock /dev/ttyAMA0```
+
+2. Ouvrir MAVProxy. Sur l'ordinateur de groundstation officiel il y a un script de startup, 
+normalement dans C:\Users\Drono\AppData\Local\MAVProxy\mavinit.scr. Le fichier doit avoir la ligne:
+`module load interop`. Tout devrait se charger automatiquement.
+
+3. DANS UNE NOUVELLE SESSION SSH
+```$ ssh pi@192.168.1.81```
+```$ cd antenna-tracking```
+```$ python main.py```
+
+Si tout va bien on devrait voir la télémétrie du drone ainsi que toutes les données de calcul de l'antenne
+
+4. Brancher les servos
+L'antenne devrait traquer le drone. 
+
+Si une erreur survient, le programme de l'antenna va output un message d'erreur avec une description donnant
+un indice sur la source du problème.
+
+F.A.Q.
+
+L'erreur "UAV connection failed to initialize. Please check MAVProxy or your network connection" survient et 
+tout semble correct malgré tout: Redémarrer la Raspberry Pi
 
 ## License
 
