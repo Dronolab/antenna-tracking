@@ -41,7 +41,7 @@ class AntennaTrackingController:
                 # Apply a pwm according to the calculations
                 self.antenna.update_target_orientation()
 
-                time.sleep(0.2)
+                # time.sleep(0.2) NOOOO
 
                 if verbose:
                     self.antenna.print_current_data()

@@ -91,8 +91,8 @@ class Antenna():
                  hat is plugged in the Raspberry Pi GPIO pins.")
 
         # Init servos
-        self.yaw_servo = YawServo(-180, 180, 1.1, 1.9, 100, 0, 0.8)
-        self.pitch_servo = PitchServo(0, 90, 1.1, 1.9, 100, 1, 0.5)
+        self.yaw_servo = YawServo(-180, 180, 1.1, 1.9, 100, 0)
+        self.pitch_servo = PitchServo(0, 90, 1.1, 1.9, 100, 1)
 
         # Setup manual override
         # self.manual_override = ManualOverride()

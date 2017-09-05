@@ -4,12 +4,12 @@ import math
 class AbstractServo():
 
     def __init__(self, min_angle, max_angle, min_pwm, max_pwm,
-                 servo_frequency, channel, mul):
+                 servo_frequency, channel):
 
         self.delta = self._getDelta(
-            max_angle,
+            1,
             self._pulse_from_pwm(max_pwm, servo_frequency),
-            min_angle,
+            -1,
             self._pulse_from_pwm(min_pwm, servo_frequency))
 
         self.hold_pwm = (max_pwm - min_pwm) / 2.0 + min_pwm
@@ -23,7 +23,7 @@ class AbstractServo():
         self.servo_frequency = servo_frequency
         self.angle_tolerance = 0
         self.channel = channel
-        self.multiplicator = mul
+
 
     def _getDelta(self, x1, y1, x2, y2):
         slope = float(y2 - y1) / float(x2 - x1)
@@ -34,7 +34,6 @@ class AbstractServo():
         pulse = pulse / 1000000
         pulse = pulse * pwmfrequency
         pulse = pulse * 4096
-
         pulse = int(pulse)
         return pulse
 
@@ -43,9 +42,9 @@ class AbstractServo():
 
         raise NotImplementedError()
 
-    def get_y(self, initval, slope, xval, mul):
+    def get_y(self, initval, slope, xval):
         y = 0
-        y = (slope * mul) * xval
+        y = slope * xval
         y = y + initval
         y = math.fabs(y)
         return int(y)
