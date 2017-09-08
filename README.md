@@ -4,6 +4,7 @@ A tool to manage Dronolab's Antenna Tracking system.
 ## Install
 
 Install [RTIMULib2](https://github.com/richardstechnotes/RTIMULib2)
+sudo pip2 install -U pymavlink (https://github.com/ArduPilot/pymavlink)
 
 ## USC Student Competition Setup
 
