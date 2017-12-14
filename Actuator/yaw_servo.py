@@ -1,5 +1,6 @@
-from abstract_servo import AbstractServo
-from PID import PID
+from Actuator.PID import PID
+from Actuator.abstract_servo import AbstractServo
+
 
 class YawServo(AbstractServo):
 

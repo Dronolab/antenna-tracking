@@ -1,14 +1,14 @@
+import logging
 import math
 import os
-import logging
+
 import Adafruit_PCA9685
 from imu_client import ImuClient
-from gps_client import GPSClient
-from unmanned_aerial_vehicule import UnmannedAerialVehicule
-from yaw_servo import YawServo
 from pitch_servo import PitchServo
-from manual_override import ManualOverride
-import time
+
+from Actuator.yaw_servo import YawServo
+from Sensors.gps_client import GPSClient
+from Vehicle.unmanned_aerial_vehicule import UnmannedAerialVehicule
 
 
 class Antenna():

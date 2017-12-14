@@ -1,8 +1,9 @@
 """Main entry point"""
 
-import sys
 import logging
-from antenna_tracking_controller import AntennaTrackingController
+import sys
+
+from Control.antenna_tracking_controller import AntennaTrackingController
 
 if __name__ == '__main__':
     verbose_mode = True

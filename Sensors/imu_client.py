@@ -1,12 +1,9 @@
-import sys
-import getopt
-import RTIMU
-import os.path
-import time
-import math
 import logging
+import math
 import threading
-import imu_setup
+import time
+
+from Sensors import imu_setup
 
 
 class ImuClient (threading.Thread):

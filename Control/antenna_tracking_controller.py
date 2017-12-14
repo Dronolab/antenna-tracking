@@ -1,11 +1,6 @@
-import json
-import socket
 import logging
-import struct
-import sys
-from antenna import Antenna
-import time
-import imu_client
+
+from Control.antenna import Antenna
 
 
 class AntennaTrackingController:
