@@ -27,7 +27,7 @@ class attitudeData:
 
 class imuData(attitudeData):
    def __init__(self):
-       attitudeData.__init__()
+       attitudeData.__init__(self)
        self.unix = Value('d', 0)
 
    def setUnix(self, unix):
@@ -56,7 +56,7 @@ class gpsData:
    def setLon(self, lon):
        self.lon.value = lon
 
-   def seLat(self, lat):
+   def setLat(self, lat):
        self.lat.value = lat
 
    def getAlt(self):

@@ -23,3 +23,4 @@ class BaseMsg:
                     setattr(self, key,messagedata.get(key, None))
         return messagedata.get("message_type", None)
 
+

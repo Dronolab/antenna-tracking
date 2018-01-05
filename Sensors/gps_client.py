@@ -27,7 +27,7 @@ class GPSClient():
             pass
         except StopIteration:
             self.gpssession = None
-            print "GPS has terminated"
+            print("GPS has terminated")
 
     def GPS_coordinate_avg(self, nb_iterations):
         alt_nb_value = 0
@@ -66,17 +66,17 @@ class GPSClient():
                 pass
             except StopIteration:
                 self.gpssession = None
-                print "GPS has terminated"
+                print("GPS has terminated")
 
         try:
             self.lat = lat_temp / lat_nb_value
         except ZeroDivisionError:
-            print "Lat_div_0"
+            print("Lat_div_0")
         try:
             self.lon = lon_temp / lon_nb_value
         except ZeroDivisionError:
-            print "Lon_div_0"
+            print("Lon_div_0")
         try:
             self.alt = alt_temp / alt_nb_value
         except ZeroDivisionError:
-            print "alt_div_0"
+            print("alt_div_0")
