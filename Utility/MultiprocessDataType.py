@@ -1,69 +1,97 @@
 from multiprocessing import Value
 
-class attitudeData:
-   def __init__(self):
-       self.pitch = Value('d', 0)
-       self.roll = Value('d', 0)
-       self.yaw = Value('d', 0)
+class antenna_shared_data:
+    def __init__(self):
+        self.alt = Value('d', 0)
+        self.lon = Value('d', 0)
+        self.lat = Value('d', 0)
+        self.pitch = Value('d', 0)
+        self.roll = Value('d', 0)
+        self.yaw = Value('d', 0)
 
-   def setPitch(self, pitch):
-       self.pitch.value = pitch
+    def setAlt(self, alt):
+        self.alt.value = alt
 
-   def setRoll(self, roll):
-       self.roll.value = roll
+    def setLon(self, lon):
+        self.lon.value = lon
 
-   def setYaw(self, yaw):
-       self.yaw.value = yaw
+    def setLat(self, lat):
+        self.lat.value = lat
 
-   def getPitch(self):
-       return self.pitch.value
+    def getAlt(self):
+        return self.alt.value
 
-   def getRoll(self):
-       return self.roll.value
+    def getLon(self):
+        return self.lon.value
 
-   def getYaw(self):
-       return self.yaw.value
+    def getLat(self):
+        return self.lat.value
+
+    def setPitch(self, pitch):
+        self.pitch.value = pitch
+
+    def setRoll(self, roll):
+        self.roll.value = roll
+
+    def setYaw(self, yaw):
+        self.yaw.value = yaw
+
+    def getPitch(self):
+        return self.pitch.value
+
+    def getRoll(self):
+        return self.roll.value
+
+    def getYaw(self):
+        return self.yaw.value
 
 
-class imuData(attitudeData):
-   def __init__(self):
-       attitudeData.__init__(self)
-       self.unix = Value('d', 0)
+class uav_shared_data:
+    def __init__(self):
+        self.alt = Value('d', 0)
+        self.lon = Value('d', 0)
+        self.lat = Value('d', 0)
 
-   def setUnix(self, unix):
-       self.unix.value = unix
+    def setAlt(self, alt):
+        self.alt.value = alt
 
-   def getUnix(self):
-       return self.unix.value
+    def setLon(self, lon):
+        self.lon.value = lon
+
+    def setLat(self, lat):
+        self.lat.value = lat
+
+    def getAlt(self):
+        return self.alt.value
+
+    def getLon(self):
+        return self.lon.value
+
+    def getLat(self):
+        return self.lat.value
 
 
-class gpsData:
-   def __init__(self):
-       self.alt = Value('d', 0)
-       self.lon = Value('d', 0)
-       self.lat = Value('d', 0)
-       self.unix = Value('d', 0)
+class setpoint_shared_data:
+    def __init__(self):
+        self.pitch = Value('d', 0)
+        self.roll = Value('d', 0)
+        self.yaw = Value('d', 0)
 
-   def setUnix(self, unix):
-       self.unix.value = unix
 
-   def getUnix(self):
-       return self.unix.value
+    def setPitch(self, pitch):
+        self.pitch.value = pitch
 
-   def setAlt(self, alt):
-       self.alt.value = alt
+    def setRoll(self, roll):
+        self.roll.value = roll
 
-   def setLon(self, lon):
-       self.lon.value = lon
+    def setYaw(self, yaw):
+        self.yaw.value = yaw
 
-   def setLat(self, lat):
-       self.lat.value = lat
+    def getPitch(self):
+        return self.pitch.value
 
-   def getAlt(self):
-       return self.alt.value
+    def getRoll(self):
+        return self.roll.value
 
-   def getLon(self):
-       return self.lon.value
-
-   def getLat(self):
-       return self.lat.value
+    def getYaw(self):
+        return self.yaw.value

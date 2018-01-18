@@ -1,26 +1,38 @@
-"""Main entry point"""
+from multiprocessing import Process, Queue
+import time
 
-import logging
-import sys
+from Utility.MultiprocessDataType import antenna_shared_data, uav_shared_data, setpoint_shared_data
 
-from Control.antenna_tracking_controller import AntennaTrackingController
+from Utility.ZmqUtility.zmqBroker import zmqBroker
+from Status.statusViewer import statusViewer
+from Control.antennaControl import antennaControl
+from Vehicle.uavInteraction import mavlinkHandler
+
+
+# initialising the shared value
+antenna_data= antenna_shared_data()
+uav_data = uav_shared_data()
+setpoint_data = setpoint_shared_data()
+
+
+
 
 if __name__ == '__main__':
-    verbose_mode = True
-    use_internal_gps = True
+    print("Starting Antenna")
 
-    # Setup log configuration
-    logging.basicConfig(
-        format='[%(asctime)s][%(levelname)s]: %(message)s',
-        level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
+    status_viewer = statusViewer()
+    zmq_broker = zmqBroker()
+    antenna_control = antennaControl(antenna_data, uav_data, setpoint_data)
+    uav = mavlinkHandler()
 
-    # Initialize antenna
-    atc = AntennaTrackingController()
+    zmq_broker.start()
+    status_viewer.start()
+    antenna_control.start()
+    uav.start()
 
-    try:
-        atc.start(verbose=verbose_mode, use_internal_gps=use_internal_gps)
-    except KeyboardInterrupt:
-        print('\r')
-        atc.stop()
-        logging.info('Antenna tracking system terminated.')
-        sys.exit(0)
+
+    while True:
+        print("watch loop")
+        time.sleep(0.5)
+
+
