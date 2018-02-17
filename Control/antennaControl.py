@@ -14,7 +14,7 @@ class antennaControl(processAbstract):
         self.antenna_data = antenna_data
         self.uav_data = uav_data
         self.actuator_setpoint = actuator_setpoint
-        self.period = 0.2 #200 ms of period might not be optimal
+        self.period = 0.2  #  200 ms of period might not be optimal
         self.declination = GeneralSettings.MAGNETIC_DECLINATION
 
     def process(self):
@@ -58,7 +58,7 @@ class antennaControl(processAbstract):
         d = R * c
         pitch_angle = math.atan2(delta_alt, d)
 
-        pitch_angle = math.degrees(pitch_angle)
+        #pitch_angle = math.degrees(pitch_angle)
 
         return pitch_angle
 
@@ -74,7 +74,7 @@ class antennaControl(processAbstract):
         y = math.sin(delta_long) * math.cos(lat_drone)
         x = math.cos(lat_sat) * math.sin(lat_drone) - \
             math.sin(lat_sat) * math.cos(lat_drone) * math.cos(delta_long)
-        bearing_initial = math.degrees(math.atan2(y, x))
+        bearing_initial = math.atan2(y, x)
         return bearing_initial
 
     def _calculate_bearing_offset(self, angle, bearingangleoffset):
@@ -93,6 +93,14 @@ class antennaControl(processAbstract):
 
         return newbearing
 
-
-
-
+    def _shortest_path(dest, source):
+        """ Calculates shortest circular path in radians.
+        """
+        dest = math.degrees(dest) + 180
+        source = math.degrees(source) + 180
+        mod_diff = (dest - source) % m360
+        distance = 180 - abs(mod_diff - 180)
+        if mod_diff < 180:
+            return math.radians(distance)*-1
+        else:
+            return math.radians(distance)
