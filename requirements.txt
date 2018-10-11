@@ -1,1 +1,6 @@
-pynput
+Adafruit_PCA9685
+flask
+pymavlink
+tabulate
+gpsd
+RTIMU
