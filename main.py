@@ -1,25 +1,27 @@
-"""Main entry point"""
-
+from Utility.MultiprocessDataType import antenna_shared_data, uav_shared_data, setpoint_shared_data
+#from Control.antennaControl import antennaControl
 import sys
-import logging
-from antenna_tracking_controller import AntennaTrackingController
+import math
+#from stationary import stop_servo
+import time
+from flasky import Flasky
+# initialising the shared value
+antenna_data = antenna_shared_data()
+uav_data = uav_shared_data()
+setpoint_data = setpoint_shared_data()
+
+
+def main():
+    #    antenna_control = antennaControl(antenna_data, uav_data, setpoint_data)
+    flasky = Flasky(antenna_data, uav_data, setpoint_data)
+    flasky.start()
+#    antenna_control.start()
+
 
 if __name__ == '__main__':
-    verbose_mode = True
-    use_internal_gps = True
-
-    # Setup log configuration
-    logging.basicConfig(
-        format='[%(asctime)s][%(levelname)s]: %(message)s',
-        level=logging.INFO, datefmt='%Y-%m-%d %H:%M:%S')
-
-    # Initialize antenna
-    atc = AntennaTrackingController()
-
+    print("Starting Antenna", time.ctime())
     try:
-        atc.start(verbose=verbose_mode, use_internal_gps=use_internal_gps)
+        main()
     except KeyboardInterrupt:
-        print('\r')
-        atc.stop()
-        logging.info('Antenna tracking system terminated.')
-        sys.exit(0)
+        print("Stopping")
+        stop_servo()
